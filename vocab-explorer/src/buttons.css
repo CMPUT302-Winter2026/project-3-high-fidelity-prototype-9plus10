@@ -1,0 +1,12 @@
+#HomeButton{
+    position: fixed;
+    bottom: 0px;
+    right: 0px;
+
+}
+
+#GroupsButton{
+    position: fixed;
+    bottom: 0px;
+    left: 0px;
+}
