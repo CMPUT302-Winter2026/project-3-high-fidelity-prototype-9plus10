@@ -5,6 +5,7 @@ import heroImg from './assets/hero.png'
 import './App.css'
 import './Wordmap'
 import CytoscapeGraph from './Wordmap'
+import NavButtons from './NavButtons'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -35,6 +36,7 @@ function App() {
 
       <section id="next-steps">
         <div>
+          {NavButtons()}
           {CytoscapeGraph()}
         </div>
       </section>
