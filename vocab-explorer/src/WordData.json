@@ -1,0 +1,19 @@
+{
+  "dictionary": [
+    {
+      "id": "_dog",
+      "english": "Dog",
+      "cree": "atim",
+      "hypo": [
+        "_puppy",
+        "_bark"
+      ]
+    },
+    {
+      "id": "_puppy",
+      "english": "Puppy",
+      "cree": "acimosis",
+      "hypo": []
+    }
+  ]
+}

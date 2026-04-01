@@ -36,8 +36,8 @@ function App() {
 
       <section id="next-steps">
         <div className=''>
-          <NavButtons/>
-          <CytoscapeGraph/>
+          <NavButtons />
+          <CytoscapeGraph />
         </div>
       </section>
 

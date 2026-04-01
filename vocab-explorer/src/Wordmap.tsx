@@ -12,9 +12,10 @@ interface SelectedElement {
 
 // ─── Sample Data ───────────────────────────────────────────────────────────────
 const initialElements: ElementDefinition[] = [
-  { data: { id: "a", label: "Node A" } },
+  { data: { id: "a", label: "D" } },
   { data: { id: "b", label: "Node B" } },
   { data: { id: "c", label: "Node C" } },
+  { data: { id: "d", label: "Unconnected" } },
   { data: { id: "ab", source: "a", target: "b", label: "A→B" } },
   { data: { id: "bc", source: "b", target: "c", label: "B→C" } },
   { data: { id: "ac", source: "a", target: "c", label: "A→C" } },
