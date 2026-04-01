@@ -28,16 +28,16 @@ function App() {
           className="counter"
           onClick={() => setCount((count) => count + 1)}
         >
-          Count is {count}
+          Count is {count} COOL! OMG!
         </button>
       </section>
 
       <div className="ticks"></div>
 
       <section id="next-steps">
-        <div>
-          {NavButtons()}
-          {CytoscapeGraph()}
+        <div className=''>
+          <NavButtons/>
+          <CytoscapeGraph/>
         </div>
       </section>
 
