@@ -14,7 +14,15 @@ interface SelectedElement {
   let initialElements: ElementDefinition[] = [];
   let words = Corpus.Words
   for (let i = 0; i< words.length; i++) {
-    initialElements.push({ data: { id: words[i].id, label: words[i].english + "\n" + words[i].cree }})
+    var label;
+    if (words[i].english != null && words[i].cree != null){
+      label = words[i].english + "\n" + words[i].cree
+    } else if (words[i].english == null) {
+      label = words[i].cree
+    } else {
+      label = words[i].english
+    }
+    initialElements.push({ data: { id: words[i].id, label: label }})
   }
 
   for  (let i = 0; i< words.length; i++) {
@@ -41,6 +49,7 @@ export default function CytoscapeGraph() {
 
   const handleCyInit = (cy: Cytoscape.Core) => {
     cyRef.current = cy;
+    cy.removeAllListeners(); // ← clears any previously stacked listeners
 
     cy.on("tap", "node, edge", (evt: EventObject) => {
       const el = evt.target ;
@@ -49,7 +58,6 @@ export default function CytoscapeGraph() {
         center: { eles: el },   // pan to center the node
         zoom: 2.2,               // target zoom level
         }, {
-          duration: 450,
           easing: 'ease-in-out-cubic',
           complete: () => console.log('done')
       });
@@ -58,13 +66,10 @@ export default function CytoscapeGraph() {
     cy.on("tap", (evt: EventObject) => {
       if (evt.target === cy) {
         setSelected(null);
-        cy.animate({ fit: { eles: cy.elements(), padding: 30 } }, { duration: 400 });
+        cy.animate({ fit: { eles: cy.elements(), padding: 30 } });
       }
     });
 
-    cy.on("drag", "node, edge", (evt: EventObject) => {
-      
-    })
   }
 
   const fitGraph = () => cyRef.current?.fit(undefined, 40);
