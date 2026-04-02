@@ -5,6 +5,8 @@ export interface Word{
   english: string
   cree: string
   hypo: string[]
+  type: string
+  info: string
 }
 
 
