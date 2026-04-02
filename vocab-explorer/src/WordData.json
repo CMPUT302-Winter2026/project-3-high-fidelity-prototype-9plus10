@@ -1,0 +1,47 @@
+[
+  {
+    "id": "_animal",
+    "english": "Animal",
+    "cree": "pisiskiw",
+    "hypo": [
+      "_panda",
+      "_dog",
+      "_mamâhtâwisiwin"
+    ],
+    "type": "Noun",
+    "info": "Animals are cool!"
+  },
+  {
+    "id": "_dog",
+    "english": "Dog",
+    "cree": "atim",
+    "hypo": [
+      "_puppy",
+      "_bark"
+    ]
+  },
+  {
+    "id": "_puppy",
+    "english": "Puppy",
+    "cree": "acimosis",
+    "hypo": []
+  },
+  {
+    "id": "_bark",
+    "english": "Bark",
+    "cree": "mikisimow",
+    "hypo": []
+  },
+  {
+    "id": "_panda",
+    "english": "Panda",
+    "cree": null,
+    "hypo": []
+  },
+  {
+    "id": "_mamâhtâwisiwin",
+    "english": null,
+    "cree": "mamâhtâwisiwin",
+    "hypo": []
+  }
+]
