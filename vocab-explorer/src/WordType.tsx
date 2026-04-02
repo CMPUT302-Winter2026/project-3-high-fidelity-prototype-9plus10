@@ -1,20 +1,26 @@
-import type { ExportJpgBlobPromiseOptions } from 'cytoscape'
-import WordData from './WordData.json'
+import WordDataJson from './WordData.json'
 
-class Word{
+export interface Word{
   id: string
   english: string
-  Cree: string
-  hypo: string
-  
-  constructor( json_obj: Object ){
-    self.id = json_obj.id
-    
-  }
+  cree: string
+  hypo: string[]
 }
 
-function ImportWords() {
-  
+
+export default class Corpus {
+    private static _instance: Corpus;
+
+    wordData: Word[]
+
+    private constructor() {
+      this.wordData = WordDataJson as Word[];
+    }
+
+    public static get Words() {
+        // Do you need arguments? Make it a regular static method instead.
+        let instance = this._instance || (this._instance = new this());
+         return instance.wordData
+    }
 }
-  
-}
+

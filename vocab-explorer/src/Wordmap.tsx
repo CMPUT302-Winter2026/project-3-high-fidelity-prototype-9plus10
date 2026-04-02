@@ -2,74 +2,37 @@
 
 import { useState, useRef } from "react";
 import CytoscapeComponent from "react-cytoscapejs";
-import Cytoscape, { type ElementDefinition, type StylesheetJsonBlock, type EventObject } from "cytoscape";
-
+import Cytoscape, { type ElementDefinition, type StylesheetJsonBlock, type EventObject} from "cytoscape";
+import Corpus from "./WordType";
 // ─── Types ─────────────────────────────────────────────────────────────────────
 interface SelectedElement {
   group: "nodes" | "edges";
   data: Record<string, unknown>;
 }
 
-// ─── Sample Data ───────────────────────────────────────────────────────────────
-const initialElements: ElementDefinition[] = [
-  { data: { id: "a", label: "D" } },
-  { data: { id: "b", label: "Node B" } },
-  { data: { id: "c", label: "Node C" } },
-  { data: { id: "d", label: "Unconnected" } },
-  { data: { id: "ab", source: "a", target: "b", label: "A→B" } },
-  { data: { id: "bc", source: "b", target: "c", label: "B→C" } },
-  { data: { id: "ac", source: "a", target: "c", label: "A→C" } },
-];
+// ─── Import words into ElementDefinition array ------------------------------
+  let initialElements: ElementDefinition[] = [];
+  let words = Corpus.Words
+  for (let i = 0; i< words.length; i++) {
+    initialElements.push({ data: { id: words[i].id, label: words[i].english + "\n" + words[i].cree }})
+  }
 
-// ─── Stylesheet ────────────────────────────────────────────────────────────────
-const stylesheet: StylesheetJsonBlock[] = [
-  {
-    selector: "node",
-    style: {
-      label: "data(label)",
-      width: 52,
-      height: 52,
-      "background-color": "#6366f1",
-      color: "#fff",
-      "font-size": 13,
-      "text-valign": "center",
-      "text-halign": "center",
-      "border-width": 2,
-      "border-color": "#818cf8",
-      "shape": "diamond"
-    },
-  },
-  {
-    selector: "node:selected",
-    style: {
-      "background-color": "#f59e0b",
-      "border-color": "#fbbf24",
-    },
-  },
-  {
-    selector: "edge",
-    style: {
-      label: "data(label)",
-      width: 2,
-      "line-color": "#4f46e5",
-      "target-arrow-color": "#4f46e5",
-      "target-arrow-shape": "triangle",
-      "curve-style": "bezier",
-      "font-size": 11,
-      color: "#94a3b8",
-      "text-background-color": "#0f172a",
-      "text-background-opacity": 0.7,
-      "text-background-padding": "3px",
-    },
-  },
-  {
-    selector: "edge:selected",
-    style: {
-      "line-color": "#f59e0b",
-      "target-arrow-color": "#f59e0b",
-    },
-  },
-];
+  for  (let i = 0; i< words.length; i++) {
+    for (let j = 0; j< words[i].hypo.length; j++)
+    initialElements.push({ data: { id: words[i].id + words[i].hypo[j], source: words[i].id, target: words[i].hypo[j], label: "" } })
+  }
+
+// ─── Sample Data ───────────────────────────────────────────────────────────────
+// const initialElements: ElementDefinition[] = [
+//   { data: { id: "a", label: "D" } },
+//   { data: { id: "b", label: "Node B" } },
+//   { data: { id: "c", label: "Node C" } },
+//   { data: { id: "d", label: "Unconnected" } },
+//   { data: { id: "ab", source: "a", target: "b", label: "A→B" } },
+//   { data: { id: "bc", source: "b", target: "c", label: "B→C" } },
+//   { data: { id: "ac", source: "a", target: "c", label: "A→C" } },
+// ];
+
 
 // ─── Component ─────────────────────────────────────────────────────────────────
 export default function CytoscapeGraph() {
@@ -80,14 +43,29 @@ export default function CytoscapeGraph() {
     cyRef.current = cy;
 
     cy.on("tap", "node, edge", (evt: EventObject) => {
-      const el = evt.target;
-      setSelected({ group: el.group() as "nodes" | "edges", data: el.data() });
+      const el = evt.target ;
+      setSelected({ group: el.group() as "nodes" | "edges", data: el.data()})
+      cy.animate({
+        center: { eles: el },   // pan to center the node
+        zoom: 2.2,               // target zoom level
+        }, {
+          duration: 450,
+          easing: 'ease-in-out-cubic',
+          complete: () => console.log('done')
+      });
     });
 
     cy.on("tap", (evt: EventObject) => {
-      if (evt.target === cy) setSelected(null);
+      if (evt.target === cy) {
+        setSelected(null);
+        cy.animate({ fit: { eles: cy.elements(), padding: 30 } }, { duration: 400 });
+      }
     });
-  };
+
+    cy.on("drag", "node, edge", (evt: EventObject) => {
+      
+    })
+  }
 
   const fitGraph = () => cyRef.current?.fit(undefined, 40);
   const resetZoom = () =>
@@ -122,6 +100,64 @@ export default function CytoscapeGraph() {
     </div>
   );
 }
+
+
+
+
+
+
+// ─── Stylesheet ────────────────────────────────────────────────────────────────
+const stylesheet: StylesheetJsonBlock[] = [
+  {
+    selector: "node",
+    style: {
+      label: "data(label)",
+      height: "label",
+      width: "label",
+      "background-color": "#6366f1",
+      color: "#fff",
+      "text-valign": "center",
+      "text-halign": "center",
+      "text-wrap": "wrap",
+      "border-width": 2,
+      "border-color": "#818cf8",
+      "shape": "round-rectangle",
+      "line-height": 1,
+      
+    },
+  },
+  {
+    selector: "node:selected",
+    style: {
+      "background-color": "#f59e0b",
+      "border-color": "#fbbf24",
+    },
+  },
+  {
+    selector: "edge",
+    style: {
+      label: "data(label)",
+      width: 2,
+      "line-color": "#4f46e5",
+      "target-arrow-color": "#4f46e5",
+      "target-arrow-shape": "triangle",
+      "curve-style": "bezier",
+      "font-size": 11,
+      color: "#94a3b8",
+      "text-background-color": "#0f172a",
+      "text-background-opacity": 0.7,
+      "text-background-padding": "3px",
+    },
+  },
+  {
+    selector: "edge:selected",
+    style: {
+      "line-color": "#f59e0b",
+      "target-arrow-color": "#f59e0b",
+    },
+  },
+];
+
 
 // ─── Styles ────────────────────────────────────────────────────────────────────
 const styles: Record<string, React.CSSProperties> = {
