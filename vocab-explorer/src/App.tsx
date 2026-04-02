@@ -8,7 +8,7 @@ function App() {
   
   return (
     <>
-      <section id="home" className='static flex content-center h-screen w-4/6 ' >
+      <section id="home" className='relative flex content-center h-screen w-4/6 ' >
         <div id='cy' className="w-full h-full">
           <CytoscapeGraph />
         </div>
