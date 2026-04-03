@@ -1,6 +1,6 @@
 import { useMemo, useState, type CSSProperties, type ReactNode } from 'react'
 import './App.css'
-import Wordmap, { WordmapPreview } from './Wordmap'
+import Wordmap from './Wordmap'
 import Corpus, {
   findWordByQuery,
   getChildWords,
@@ -287,7 +287,6 @@ function App() {
       case 'search':
         return (
           <SearchPage
-            semanticGaps={semanticGaps}
             searchValue={searchValue}
             onSearchValueChange={setSearchValue}
             onSearch={() => openSearchResult(searchValue)}
@@ -504,7 +503,6 @@ function AuthPage({ mode, onPrimaryAction, onSwitchMode, onOpenSettings }: AuthP
 }
 
 type SearchPageProps = {
-  semanticGaps: boolean
   searchValue: string
   onSearchValueChange: (value: string) => void
   onSearch: () => void
@@ -515,7 +513,6 @@ type SearchPageProps = {
 }
 
 function SearchPage({
-  semanticGaps,
   searchValue,
   onSearchValueChange,
   onSearch,
@@ -556,7 +553,7 @@ function SearchPage({
           </form>
 
           <div className="search-preview-panel">
-            <WordmapPreview showSemanticGaps={semanticGaps} />
+            <FancyWebmapArtwork />
           </div>
         </div>
       </div>
@@ -1197,6 +1194,87 @@ function WordArtwork({ word }: WordArtworkProps) {
       <span>{getWordLabel(word)}</span>
       <small>{getWordLabel(word, 'cree')}</small>
     </div>
+  )
+}
+
+function FancyWebmapArtwork() {
+  return (
+    <svg viewBox="0 0 360 320" className="fancy-webmap-art" role="img" aria-label="Decorative word web">
+      <defs>
+        <linearGradient id="webAmbient" x1="50%" y1="0%" x2="50%" y2="100%">
+          <stop offset="0%" stopColor="rgba(163, 214, 233, 0.12)" />
+          <stop offset="100%" stopColor="rgba(92, 111, 185, 0.03)" />
+        </linearGradient>
+        <radialGradient id="webGlowA" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="rgba(176, 222, 255, 0.28)" />
+          <stop offset="100%" stopColor="rgba(176, 222, 255, 0)" />
+        </radialGradient>
+        <radialGradient id="webGlowB" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="rgba(206, 181, 255, 0.22)" />
+          <stop offset="100%" stopColor="rgba(206, 181, 255, 0)" />
+        </radialGradient>
+        <linearGradient id="webNodeFill" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="rgba(248,250,252,0.88)" />
+          <stop offset="100%" stopColor="rgba(199,210,223,0.34)" />
+        </linearGradient>
+        <linearGradient id="webNodeEdge" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="rgba(255,255,255,0.44)" />
+          <stop offset="100%" stopColor="rgba(188,203,220,0.14)" />
+        </linearGradient>
+        <linearGradient id="webLine" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="rgba(244,247,252,0.68)" />
+          <stop offset="100%" stopColor="rgba(178,196,218,0.18)" />
+        </linearGradient>
+        <filter id="webGlow" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur stdDeviation="8" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+        <filter id="softBlur" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="18" />
+        </filter>
+      </defs>
+
+      <rect width="360" height="320" fill="url(#webAmbient)" />
+      <circle cx="110" cy="96" r="92" fill="url(#webGlowA)" filter="url(#softBlur)" />
+      <circle cx="252" cy="204" r="104" fill="url(#webGlowB)" filter="url(#softBlur)" />
+
+      <g opacity="0.92">
+        <path d="M178 48L112 118" stroke="url(#webLine)" strokeWidth="4" strokeLinecap="round" />
+        <path d="M178 48L208 176" stroke="url(#webLine)" strokeWidth="4" strokeLinecap="round" />
+        <path d="M178 48L284 124" stroke="url(#webLine)" strokeWidth="4" strokeLinecap="round" />
+        <path d="M112 118L208 176" stroke="url(#webLine)" strokeWidth="4" strokeLinecap="round" />
+        <path d="M112 118L284 124" stroke="url(#webLine)" strokeWidth="4" strokeLinecap="round" />
+        <path d="M112 118L74 274" stroke="url(#webLine)" strokeWidth="4" strokeLinecap="round" />
+        <path d="M208 176L284 124" stroke="url(#webLine)" strokeWidth="3.6" strokeLinecap="round" />
+        <path d="M208 176L252 230" stroke="url(#webLine)" strokeWidth="3.6" strokeLinecap="round" />
+        <path d="M284 124L314 72" stroke="url(#webLine)" strokeWidth="3.2" strokeLinecap="round" opacity="0.5" />
+        <path d="M178 48L66 78" stroke="url(#webLine)" strokeWidth="3.2" strokeLinecap="round" opacity="0.42" />
+        <path d="M74 274L144 242" stroke="url(#webLine)" strokeWidth="3" strokeLinecap="round" opacity="0.36" />
+        <path d="M252 230L312 258" stroke="url(#webLine)" strokeWidth="3" strokeLinecap="round" opacity="0.36" />
+        <path d="M66 78C106 34 162 16 228 26" fill="none" stroke="rgba(210,224,241,0.14)" strokeWidth="2.4" strokeDasharray="5 8" />
+      </g>
+
+      <g filter="url(#webGlow)">
+        <ellipse cx="178" cy="48" rx="38" ry="21" fill="url(#webNodeFill)" stroke="url(#webNodeEdge)" strokeWidth="2" />
+        <ellipse cx="112" cy="118" rx="40" ry="22" fill="url(#webNodeFill)" stroke="url(#webNodeEdge)" strokeWidth="2" />
+        <ellipse cx="284" cy="124" rx="42" ry="23" fill="url(#webNodeFill)" stroke="url(#webNodeEdge)" strokeWidth="2" />
+        <ellipse cx="208" cy="176" rx="38" ry="21" fill="url(#webNodeFill)" stroke="url(#webNodeEdge)" strokeWidth="2" />
+        <ellipse cx="74" cy="274" rx="42" ry="23" fill="url(#webNodeFill)" stroke="rgba(244,200,115,0.58)" strokeDasharray="5 5" strokeWidth="2" />
+        <ellipse cx="252" cy="230" rx="27" ry="15" fill="rgba(241,246,250,0.42)" stroke="rgba(226,235,244,0.16)" strokeWidth="1.5" />
+        <ellipse cx="314" cy="72" rx="19" ry="11" fill="rgba(241,246,250,0.28)" stroke="rgba(226,235,244,0.12)" strokeWidth="1.2" />
+        <ellipse cx="66" cy="78" rx="16" ry="9" fill="rgba(241,246,250,0.24)" stroke="rgba(226,235,244,0.1)" strokeWidth="1.1" />
+        <circle cx="149" cy="242" r="7" fill="rgba(231,240,247,0.3)" />
+        <circle cx="311" cy="257" r="6" fill="rgba(231,240,247,0.24)" />
+      </g>
+
+      <g opacity="0.2">
+        <circle cx="178" cy="48" r="56" fill="none" stroke="rgba(255,255,255,0.16)" strokeWidth="1.4" />
+        <circle cx="208" cy="176" r="68" fill="none" stroke="rgba(207,219,236,0.12)" strokeWidth="1.2" />
+      </g>
+    </svg>
   )
 }
 
