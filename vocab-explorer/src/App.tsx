@@ -53,7 +53,7 @@ function App() {
 
   const [screen, setScreen] = useState<Screen>('login')
   const [previousScreen, setPreviousScreen] = useState<Screen>('search')
-  const [searchValue, setSearchValue] = useState(getWordLabel(defaultWord))
+  const [searchValue, setSearchValue] = useState('')
   const [activeWordId, setActiveWordId] = useState(defaultWord.id)
   const [showHelp, setShowHelp] = useState(false)
   const [semanticGaps, setSemanticGaps] = useState(true)
@@ -103,9 +103,15 @@ function App() {
 
   function openSearchResult(query: string) {
     const nextWord = findWordByQuery(query) ?? defaultWord
-    setSearchValue(query.trim() ? query : getWordLabel(nextWord))
+    setSearchValue(getWordLabel(nextWord))
     setActiveWordId(nextWord.id)
     setScreen('map')
+    setShowHelp(false)
+  }
+
+  function openSearchScreen() {
+    setSearchValue('')
+    setScreen('search')
     setShowHelp(false)
   }
 
@@ -144,20 +150,22 @@ function App() {
             onOpenSettings={() => openSettings('search')}
             onToggleHelp={() => setShowHelp((current) => !current)}
             onOpenGroups={() => setScreen('groups')}
-            onOpenHome={() => setScreen('search')}
+            onOpenHome={openSearchScreen}
           />
         )
       case 'map':
         return (
           <MapPage
             word={activeWord}
+            searchValue={searchValue}
             semanticGaps={semanticGaps}
-            onBack={() => setScreen('search')}
+            onSearchValueChange={setSearchValue}
+            onSearch={() => openSearchResult(searchValue)}
             onOpenSettings={() => openSettings('map')}
             onToggleHelp={() => setShowHelp((current) => !current)}
             onOpenWord={openWordDetail}
             onOpenGroups={() => setScreen('groups')}
-            onOpenHome={() => setScreen('search')}
+            onOpenHome={openSearchScreen}
           />
         )
       case 'detail':
@@ -175,7 +183,7 @@ function App() {
               setNotesByWordId((current) => ({ ...current, [activeWord.id]: value }))
             }
             onOpenGroups={() => setScreen('groups')}
-            onOpenHome={() => setScreen('search')}
+            onOpenHome={openSearchScreen}
           />
         )
       case 'settings':
@@ -195,7 +203,7 @@ function App() {
               setScreen('login')
             }}
             onOpenGroups={() => setScreen('groups')}
-            onOpenHome={() => setScreen('search')}
+            onOpenHome={openSearchScreen}
           />
         )
       case 'groups':
@@ -210,7 +218,7 @@ function App() {
             }}
             onChangeGroup={setSelectedGroup}
             onOpenGroups={() => setScreen('groups')}
-            onOpenHome={() => setScreen('search')}
+            onOpenHome={openSearchScreen}
           />
         )
       default:
@@ -222,7 +230,15 @@ function App() {
 
   return (
     <div className="app-shell" style={shellStyle}>
-      <div className="phone-frame">
+      <div className="phone-shell">
+        <div className="phone-overlay" aria-hidden="true">
+          <span className="phone-camera" />
+          <span className="phone-speaker" />
+          <span className="phone-button phone-button-top" />
+          <span className="phone-button phone-button-bottom" />
+        </div>
+
+        <div className="phone-frame">
         {showHelpCard ? (
           <aside className="help-card">
             <strong>Flow</strong>
@@ -230,6 +246,7 @@ function App() {
           </aside>
         ) : null}
         {renderPage()}
+        </div>
       </div>
     </div>
   )
@@ -341,25 +358,29 @@ function SearchPage({
       </div>
 
       <div className="search-stage">
-        <WordmapPreview showSemanticGaps={semanticGaps} />
+        <div className="search-preview-stack">
+          <form
+            className="search-form search-form-centered"
+            onSubmit={(event) => {
+              event.preventDefault()
+              onSearch()
+            }}
+          >
+            <input
+              type="text"
+              value={searchValue}
+              onChange={(event) => onSearchValueChange(event.target.value)}
+              placeholder="Search for an English or Cree word"
+            />
+            <button type="submit" className="search-submit search-submit-inline" aria-label="Search">
+              <SearchIcon />
+            </button>
+          </form>
 
-        <form
-          className="search-form search-form-overlay"
-          onSubmit={(event) => {
-            event.preventDefault()
-            onSearch()
-          }}
-        >
-          <input
-            type="text"
-            value={searchValue}
-            onChange={(event) => onSearchValueChange(event.target.value)}
-            placeholder="Enter an English or Cree word"
-          />
-          <button type="submit" className="search-submit search-submit-inline" aria-label="Search">
-            <SearchIcon />
-          </button>
-        </form>
+          <div className="search-preview-panel">
+            <WordmapPreview showSemanticGaps={semanticGaps} />
+          </div>
+        </div>
       </div>
 
       <FooterNav active="home" onOpenGroups={onOpenGroups} onOpenHome={onOpenHome} />
@@ -369,8 +390,10 @@ function SearchPage({
 
 type MapPageProps = {
   word: Word
+  searchValue: string
   semanticGaps: boolean
-  onBack: () => void
+  onSearchValueChange: (value: string) => void
+  onSearch: () => void
   onOpenSettings: () => void
   onToggleHelp: () => void
   onOpenWord: (wordId: string) => void
@@ -380,8 +403,10 @@ type MapPageProps = {
 
 function MapPage({
   word,
+  searchValue,
   semanticGaps,
-  onBack,
+  onSearchValueChange,
+  onSearch,
   onOpenSettings,
   onToggleHelp,
   onOpenWord,
@@ -390,28 +415,38 @@ function MapPage({
 }: MapPageProps) {
   return (
     <section className="page map-page has-footer">
-      <div className="page-header">
-        <IconButton label="Back" onClick={onBack}>
-          <BackIcon />
-        </IconButton>
+      <div className="map-stage">
+        <Wordmap focusWord={word} onSelectWord={onOpenWord} showSemanticGaps={semanticGaps} />
 
-        <div className="page-header-actions">
-          <CircleIconButton label="Help" onClick={onToggleHelp}>
-            <HelpIcon />
-          </CircleIconButton>
-          <CircleIconButton label="Settings" onClick={onOpenSettings}>
-            <SettingsIcon />
-          </CircleIconButton>
+        <div className="map-top-bar">
+          <form
+            className="search-form map-search-form"
+            onSubmit={(event) => {
+              event.preventDefault()
+              onSearch()
+            }}
+          >
+            <input
+              type="text"
+              value={searchValue}
+              onChange={(event) => onSearchValueChange(event.target.value)}
+              placeholder="Search for an English or Cree word"
+            />
+            <button type="submit" className="search-submit search-submit-inline" aria-label="Search">
+              <SearchIcon />
+            </button>
+          </form>
+
+          <div className="page-header-actions map-header-actions">
+            <CircleIconButton label="Help" onClick={onToggleHelp}>
+              <HelpIcon />
+            </CircleIconButton>
+            <CircleIconButton label="Settings" onClick={onOpenSettings}>
+              <SettingsIcon />
+            </CircleIconButton>
+          </div>
         </div>
       </div>
-
-      <div className="map-title-card">
-        <span className="small-kicker">Word Map</span>
-        <h2>{getWordLabel(word)} Network</h2>
-        <p>Tap any connected node to open its vocabulary details.</p>
-      </div>
-
-      <Wordmap focusWord={word} onSelectWord={onOpenWord} showSemanticGaps={semanticGaps} />
 
       <FooterNav onOpenGroups={onOpenGroups} onOpenHome={onOpenHome} />
     </section>
