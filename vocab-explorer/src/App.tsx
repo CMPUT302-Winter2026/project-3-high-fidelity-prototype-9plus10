@@ -18,6 +18,13 @@ type Swatch = {
   value: string
 }
 
+type WordGroup = {
+  id: string
+  name: string
+  wordIds: string[]
+  notes: string
+}
+
 const englishSwatches: Swatch[] = [
   { label: 'Rose', value: '#ef7b7b' },
   { label: 'Sun', value: '#f7b85d' },
@@ -36,7 +43,14 @@ const creeSwatches: Swatch[] = [
   { label: 'Plum', value: '#cba0bd' },
 ]
 
-const groupOptions = ['Animals', 'Family Words', 'Classroom', 'Practice Later']
+const initialGroups: WordGroup[] = [
+  {
+    id: 'animals',
+    name: 'Animals',
+    wordIds: ['_dog'],
+    notes: '',
+  },
+]
 
 const matchScores: Record<string, number> = {
   _animal: 91,
@@ -60,10 +74,18 @@ function App() {
   const [fontSize, setFontSize] = useState(18)
   const [englishColor, setEnglishColor] = useState(englishSwatches[4].value)
   const [creeColor, setCreeColor] = useState(creeSwatches[5].value)
-  const [selectedGroup, setSelectedGroup] = useState(groupOptions[0])
+  const [groups, setGroups] = useState<WordGroup[]>(initialGroups)
+  const [selectedGroupId, setSelectedGroupId] = useState(initialGroups[0].id)
+  const [groupsView, setGroupsView] = useState<'overview' | 'detail'>('overview')
+  const [groupSearchValue, setGroupSearchValue] = useState('')
+  const [showCreateGroupModal, setShowCreateGroupModal] = useState(false)
+  const [newGroupName, setNewGroupName] = useState('')
+  const [showAddWordsModal, setShowAddWordsModal] = useState(false)
+  const [groupWordSearch, setGroupWordSearch] = useState('')
   const [notesByWordId, setNotesByWordId] = useState<Record<string, string>>({})
 
   const activeWord = getWordById(activeWordId) ?? defaultWord
+  const selectedGroup = groups.find((group) => group.id === selectedGroupId) ?? groups[0]
   const relatedWords = useMemo(() => {
     const deduped = new Map<string, Word>()
     ;[...getParentWords(activeWord.id), ...getSiblingWords(activeWord.id), ...getChildWords(activeWord.id)].forEach(
@@ -75,16 +97,38 @@ function App() {
     return [...deduped.values()].slice(0, 3)
   }, [activeWord.id])
 
-  const groupedWords = useMemo(() => {
-    const deduped = new Map<string, Word>()
-    ;[activeWord, ...getChildWords(activeWord.id), ...getSiblingWords(activeWord.id), ...Corpus.Words].forEach(
-      (word) => {
-        deduped.set(word.id, word)
-      },
-    )
+  const groupWords = useMemo(
+    () =>
+      (selectedGroup?.wordIds ?? [])
+        .map((wordId) => getWordById(wordId))
+        .filter((word): word is Word => Boolean(word)),
+    [selectedGroup],
+  )
 
-    return [...deduped.values()].slice(0, 4)
-  }, [activeWord])
+  const filteredGroups = useMemo(() => {
+    const searchTerm = groupSearchValue.trim().toLowerCase()
+
+    if (!searchTerm) {
+      return groups
+    }
+
+    return groups.filter((group) => group.name.toLowerCase().includes(searchTerm))
+  }, [groupSearchValue, groups])
+
+  const addableWords = useMemo(() => {
+    const searchTerm = groupWordSearch.trim().toLowerCase()
+    const selectedIds = new Set(selectedGroup?.wordIds ?? [])
+
+    return Corpus.Words.filter((word) => !selectedIds.has(word.id)).filter((word) => {
+      if (!searchTerm) {
+        return true
+      }
+
+      return [word.english, word.cree]
+        .filter(Boolean)
+        .some((value) => value?.toLowerCase().includes(searchTerm))
+    })
+  }, [groupWordSearch, selectedGroup])
 
   const shellStyle = useMemo(
     () =>
@@ -115,9 +159,109 @@ function App() {
     setShowHelp(false)
   }
 
+  function openGroupsOverview() {
+    setScreen('groups')
+    setGroupsView('overview')
+    setShowCreateGroupModal(false)
+    setShowAddWordsModal(false)
+    setGroupWordSearch('')
+  }
+
+  function openGroupDetail(groupId: string) {
+    setSelectedGroupId(groupId)
+    setGroupsView('detail')
+    setScreen('groups')
+    setShowCreateGroupModal(false)
+    setShowAddWordsModal(false)
+    setGroupWordSearch('')
+  }
+
   function openWordDetail(wordId: string) {
     setActiveWordId(wordId)
     setScreen('detail')
+  }
+
+  function addWordToGroup(groupId: string, wordId: string) {
+    setGroups((currentGroups) =>
+      currentGroups.map((group) =>
+        group.id === groupId && !group.wordIds.includes(wordId)
+          ? { ...group, wordIds: [...group.wordIds, wordId] }
+          : group,
+      ),
+    )
+  }
+
+  function handleSelectGroup(groupId: string) {
+    setSelectedGroupId(groupId)
+    addWordToGroup(groupId, activeWord.id)
+  }
+
+  function handleCreateGroup() {
+    const trimmedName = newGroupName.trim()
+
+    if (!trimmedName) {
+      return
+    }
+
+    const baseId = trimmedName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+    let nextId = baseId || `group-${groups.length + 1}`
+    let counter = 2
+
+    while (groups.some((group) => group.id === nextId)) {
+      nextId = `${baseId || 'group'}-${counter}`
+      counter += 1
+    }
+
+    const nextGroup: WordGroup = {
+      id: nextId,
+      name: trimmedName,
+      wordIds: [],
+      notes: '',
+    }
+
+    setGroups((currentGroups) => [...currentGroups, nextGroup])
+    setNewGroupName('')
+    openGroupDetail(nextGroup.id)
+  }
+
+  function updateGroupNotes(notes: string) {
+    if (!selectedGroup) {
+      return
+    }
+
+    setGroups((currentGroups) =>
+      currentGroups.map((group) => (group.id === selectedGroup.id ? { ...group, notes } : group)),
+    )
+  }
+
+  function removeWordFromSelectedGroup(wordId: string) {
+    if (!selectedGroup) {
+      return
+    }
+
+    setGroups((currentGroups) =>
+      currentGroups.map((group) =>
+        group.id === selectedGroup.id
+          ? { ...group, wordIds: group.wordIds.filter((groupWordId) => groupWordId !== wordId) }
+          : group,
+      ),
+    )
+  }
+
+  function deleteSelectedGroup() {
+    if (!selectedGroup) {
+      return
+    }
+
+    const remainingGroups = groups.filter((group) => group.id !== selectedGroup.id)
+    setGroups(remainingGroups)
+
+    if (remainingGroups[0]) {
+      setSelectedGroupId(remainingGroups[0].id)
+    }
+
+    setGroupsView('overview')
+    setShowAddWordsModal(false)
   }
 
   function renderPage() {
@@ -149,7 +293,7 @@ function App() {
             onSearch={() => openSearchResult(searchValue)}
             onOpenSettings={() => openSettings('search')}
             onToggleHelp={() => setShowHelp((current) => !current)}
-            onOpenGroups={() => setScreen('groups')}
+            onOpenGroups={openGroupsOverview}
             onOpenHome={openSearchScreen}
           />
         )
@@ -164,7 +308,7 @@ function App() {
             onOpenSettings={() => openSettings('map')}
             onToggleHelp={() => setShowHelp((current) => !current)}
             onOpenWord={openWordDetail}
-            onOpenGroups={() => setScreen('groups')}
+            onOpenGroups={openGroupsOverview}
             onOpenHome={openSearchScreen}
           />
         )
@@ -173,16 +317,17 @@ function App() {
           <WordDetailPage
             word={activeWord}
             relatedWords={relatedWords}
-            selectedGroup={selectedGroup}
+            groups={groups}
+            selectedGroupId={selectedGroupId}
             noteValue={notesByWordId[activeWord.id] ?? ''}
             matchScore={matchScores[activeWord.id] ?? 78}
             onBack={() => setScreen('map')}
             onOpenSettings={() => openSettings('detail')}
-            onSelectGroup={setSelectedGroup}
+            onSelectGroup={handleSelectGroup}
             onNoteChange={(value) =>
               setNotesByWordId((current) => ({ ...current, [activeWord.id]: value }))
             }
-            onOpenGroups={() => setScreen('groups')}
+            onOpenGroups={openGroupsOverview}
             onOpenHome={openSearchScreen}
           />
         )
@@ -202,22 +347,55 @@ function App() {
               setShowHelp(false)
               setScreen('login')
             }}
-            onOpenGroups={() => setScreen('groups')}
+            onOpenGroups={openGroupsOverview}
             onOpenHome={openSearchScreen}
           />
         )
       case 'groups':
         return (
           <GroupsPage
-            words={groupedWords}
+            groups={filteredGroups}
             selectedGroup={selectedGroup}
-            onOpenSettings={() => openSettings('groups')}
+            groupWords={groupWords}
+            groupsView={groupsView}
+            groupSearchValue={groupSearchValue}
+            newGroupName={newGroupName}
+            groupWordSearch={groupWordSearch}
+            showCreateGroupModal={showCreateGroupModal}
+            showAddWordsModal={showAddWordsModal}
+            addableWords={addableWords}
+            onBack={openGroupsOverview}
+            onOpenGroup={openGroupDetail}
             onOpenWord={(wordId) => {
               setActiveWordId(wordId)
               setScreen('detail')
             }}
-            onChangeGroup={setSelectedGroup}
-            onOpenGroups={() => setScreen('groups')}
+            onGroupSearchChange={setGroupSearchValue}
+            onNewGroupNameChange={setNewGroupName}
+            onOpenCreateGroup={() => setShowCreateGroupModal(true)}
+            onCloseCreateGroup={() => {
+              setShowCreateGroupModal(false)
+              setNewGroupName('')
+            }}
+            onCreateGroup={handleCreateGroup}
+            onOpenAddWords={() => setShowAddWordsModal(true)}
+            onCloseAddWords={() => {
+              setShowAddWordsModal(false)
+              setGroupWordSearch('')
+            }}
+            onGroupWordSearchChange={setGroupWordSearch}
+            onAddWord={(wordId) => {
+              if (selectedGroup) {
+                addWordToGroup(selectedGroup.id, wordId)
+              }
+
+              setShowAddWordsModal(false)
+              setGroupWordSearch('')
+            }}
+            onRemoveWord={removeWordFromSelectedGroup}
+            onGroupNotesChange={updateGroupNotes}
+            onDeleteGroup={deleteSelectedGroup}
+            onOpenGroups={openGroupsOverview}
             onOpenHome={openSearchScreen}
           />
         )
@@ -456,12 +634,13 @@ function MapPage({
 type WordDetailPageProps = {
   word: Word
   relatedWords: Word[]
-  selectedGroup: string
+  groups: WordGroup[]
+  selectedGroupId: string
   noteValue: string
   matchScore: number
   onBack: () => void
   onOpenSettings: () => void
-  onSelectGroup: (group: string) => void
+  onSelectGroup: (groupId: string) => void
   onNoteChange: (value: string) => void
   onOpenGroups: () => void
   onOpenHome: () => void
@@ -470,7 +649,8 @@ type WordDetailPageProps = {
 function WordDetailPage({
   word,
   relatedWords,
-  selectedGroup,
+  groups,
+  selectedGroupId,
   noteValue,
   matchScore,
   onBack,
@@ -523,10 +703,10 @@ function WordDetailPage({
 
       <div className="group-picker">
         <span>Add to group?</span>
-        <select value={selectedGroup} onChange={(event) => onSelectGroup(event.target.value)}>
-          {groupOptions.map((group) => (
-            <option key={group} value={group}>
-              {group}
+        <select value={selectedGroupId} onChange={(event) => onSelectGroup(event.target.value)}>
+          {groups.map((group) => (
+            <option key={group.id} value={group.id}>
+              {group.name}
             </option>
           ))}
         </select>
@@ -679,61 +859,217 @@ function SettingsPage({
 }
 
 type GroupsPageProps = {
-  words: Word[]
-  selectedGroup: string
-  onOpenSettings: () => void
+  groups: WordGroup[]
+  selectedGroup?: WordGroup
+  groupWords: Word[]
+  groupsView: 'overview' | 'detail'
+  groupSearchValue: string
+  newGroupName: string
+  groupWordSearch: string
+  showCreateGroupModal: boolean
+  showAddWordsModal: boolean
+  addableWords: Word[]
+  onBack: () => void
+  onOpenGroup: (groupId: string) => void
   onOpenWord: (wordId: string) => void
-  onChangeGroup: (group: string) => void
+  onGroupSearchChange: (value: string) => void
+  onNewGroupNameChange: (value: string) => void
+  onOpenCreateGroup: () => void
+  onCloseCreateGroup: () => void
+  onCreateGroup: () => void
+  onOpenAddWords: () => void
+  onCloseAddWords: () => void
+  onGroupWordSearchChange: (value: string) => void
+  onAddWord: (wordId: string) => void
+  onRemoveWord: (wordId: string) => void
+  onGroupNotesChange: (value: string) => void
+  onDeleteGroup: () => void
   onOpenGroups: () => void
   onOpenHome: () => void
 }
 
 function GroupsPage({
-  words,
+  groups,
   selectedGroup,
-  onOpenSettings,
+  groupWords,
+  groupsView,
+  groupSearchValue,
+  newGroupName,
+  groupWordSearch,
+  showCreateGroupModal,
+  showAddWordsModal,
+  addableWords,
+  onBack,
+  onOpenGroup,
   onOpenWord,
-  onChangeGroup,
+  onGroupSearchChange,
+  onNewGroupNameChange,
+  onOpenCreateGroup,
+  onCloseCreateGroup,
+  onCreateGroup,
+  onOpenAddWords,
+  onCloseAddWords,
+  onGroupWordSearchChange,
+  onAddWord,
+  onRemoveWord,
+  onGroupNotesChange,
+  onDeleteGroup,
   onOpenGroups,
   onOpenHome,
 }: GroupsPageProps) {
+  const isDetailView = groupsView === 'detail' && selectedGroup
+
   return (
     <section className="page groups-page has-footer">
-      <div className="page-header">
-        <div className="settings-title">Groups</div>
+      {!isDetailView ? (
+        <>
+          <div className="groups-top-bar">
+            <IconButton label="Back" onClick={onOpenHome}>
+              <BackIcon />
+            </IconButton>
 
-        <CircleIconButton label="Settings" onClick={onOpenSettings}>
-          <SettingsIcon />
-        </CircleIconButton>
-      </div>
+            <form className="search-form groups-search-form" onSubmit={(event) => event.preventDefault()}>
+              <input
+                type="text"
+                value={groupSearchValue}
+                onChange={(event) => onGroupSearchChange(event.target.value)}
+                placeholder="Search Groups"
+              />
+              <button type="button" className="search-submit search-submit-inline" aria-label="Search groups">
+                <SearchIcon />
+              </button>
+            </form>
+          </div>
 
-      <div className="group-summary">
-        <span>Active group</span>
-        <select value={selectedGroup} onChange={(event) => onChangeGroup(event.target.value)}>
-          {groupOptions.map((group) => (
-            <option key={group} value={group}>
-              {group}
-            </option>
-          ))}
-        </select>
-      </div>
+          <div className="groups-overview-list">
+            {groups.map((group) => (
+              <button
+                key={group.id}
+                type="button"
+                className="group-overview-card"
+                onClick={() => onOpenGroup(group.id)}
+              >
+                {group.name} [{group.wordIds.length}]
+              </button>
+            ))}
+          </div>
 
-      <div className="group-list">
-        {words.map((word) => (
-          <button
-            key={word.id}
-            type="button"
-            className="group-list-item"
-            onClick={() => onOpenWord(word.id)}
-          >
-            <div>
-              <strong>{getWordLabel(word)}</strong>
-              <p>{getWordLabel(word, 'cree')}</p>
-            </div>
-            <span>{word.type}</span>
+          <button type="button" className="create-group-button" onClick={onOpenCreateGroup}>
+            Create Group +
           </button>
-        ))}
-      </div>
+        </>
+      ) : (
+        <>
+            <div className="groups-top-bar">
+            <IconButton label="Back" onClick={onBack}>
+              <BackIcon />
+            </IconButton>
+
+            <div className="group-detail-title">{selectedGroup.name}</div>
+          </div>
+
+          <div className="group-detail-list">
+            {groupWords.map((word) => (
+              <div key={word.id} className="group-word-row">
+                <button type="button" className="group-word-open" onClick={() => onOpenWord(word.id)}>
+                  {getWordLabel(word)}
+                </button>
+                <button
+                  type="button"
+                  className="group-remove-button"
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    onRemoveWord(word.id)
+                  }}
+                  aria-label={`Remove ${getWordLabel(word)}`}
+                >
+                  X
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <button type="button" className="create-group-button add-words-button" onClick={onOpenAddWords}>
+            Add More Words +
+          </button>
+
+          <label className="group-notes">
+            <span>Notes:</span>
+            <textarea
+              value={selectedGroup.notes}
+              onChange={(event) => onGroupNotesChange(event.target.value)}
+              placeholder="Tap here to add notes..."
+            />
+          </label>
+
+          <button type="button" className="delete-group-button" onClick={onDeleteGroup}>
+            Delete Group
+          </button>
+        </>
+      )}
+
+      {showCreateGroupModal ? (
+        <div className="group-modal-backdrop">
+          <div className="group-modal-card">
+            <div className="group-modal-header">
+              <strong>Add Group</strong>
+              <button type="button" className="group-remove-button modal-close-button" onClick={onCloseCreateGroup}>
+                X
+              </button>
+            </div>
+
+            <input
+              type="text"
+              value={newGroupName}
+              onChange={(event) => onNewGroupNameChange(event.target.value)}
+              placeholder="Group Name..."
+            />
+
+            <button
+              type="button"
+              className="group-modal-action"
+              onClick={onCreateGroup}
+              disabled={!newGroupName.trim()}
+            >
+              Add Group
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      {showAddWordsModal && selectedGroup ? (
+        <div className="group-modal-backdrop">
+          <div className="group-modal-card group-modal-card-wide">
+            <div className="group-modal-header">
+              <strong>Add Words</strong>
+              <button type="button" className="group-remove-button modal-close-button" onClick={onCloseAddWords}>
+                X
+              </button>
+            </div>
+
+            <input
+              type="text"
+              value={groupWordSearch}
+              onChange={(event) => onGroupWordSearchChange(event.target.value)}
+              placeholder="Search words..."
+            />
+
+            <div className="group-add-list">
+              {addableWords.map((word) => (
+                <button
+                  key={word.id}
+                  type="button"
+                  className="group-add-word"
+                  onClick={() => onAddWord(word.id)}
+                >
+                  <span>{getWordLabel(word)}</span>
+                  <small>{getWordLabel(word, 'cree')}</small>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <FooterNav active="groups" onOpenGroups={onOpenGroups} onOpenHome={onOpenHome} />
     </section>
