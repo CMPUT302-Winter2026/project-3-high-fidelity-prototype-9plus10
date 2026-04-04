@@ -105,7 +105,7 @@ function getEdgeRelationship(sourceId: string, targetId: string): 'hierarchy' | 
     return 'related'
   }
 
-  if (sourceId === '_animal' && (targetId === '_panda' || targetId === '_mamahtawisiwin')) {
+  if (sourceId === '_animal' && (targetId === '_mamahtawisiwin')) {
     return 'related'
   }
 

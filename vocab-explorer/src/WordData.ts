@@ -12,7 +12,7 @@ export const frontendWordList: FrontendWord[] = [
     id: '_animal',
     english: 'Animal',
     cree: 'pisiskiw',
-    hypo: ['_panda', '_dog', '_mamahtawisiwin'],
+    hypo: ['_panda', '_dog', '_mamahtawisiwin', '_fish'],
     type: 'Noun',
     info: 'A general category word that links several living-creature concepts together.',
   },
@@ -56,4 +56,54 @@ export const frontendWordList: FrontendWord[] = [
     type: 'Concept',
     info: 'A sample Cree-only entry included to demonstrate semantic gap highlighting.',
   },
+  {
+    id:'_fish',
+    english: 'Fish',
+    cree: 'kinosêw',
+    hypo: [],
+    type: 'Noun',
+    info: 'An animal that lives in the water'
+  },
+  {
+    id: '_plant',
+    english: "Plant",
+    cree: "ohpikihcikan",
+    hypo: [],
+    type: "Noun",
+    info: "Grows from the ground"
+  },
+  {
+    id: '_community',
+    english: "Community",
+    cree: "ihtâwin",
+    hypo: ["_father", "_mother", "_sibling" ],
+    type: "Noun",
+    info: "A group of people or a place of living"
+  },
+
+  {
+    id: '_father',
+    english: "Father",
+    cree: "nôhtâwiy",
+    hypo: [],
+    type: "Noun",
+    info: "Fathers are great!"
+  },
+  {
+    id: '_mother',
+    english: "Mother",
+    cree: "nêkâ",
+    hypo: [],
+    type: "Noun",
+    info: "Mothers are great!"
+  },
+  {
+    id: '_sibling',
+    english: "sibling",
+    cree: "nîtisân",
+    hypo: [],
+    type: "Noun",
+    info: "Lovely to have a sibbling!"
+  },
+  
 ]
