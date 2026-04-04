@@ -22,12 +22,20 @@ type Point = {
   y: number
 }
 
+type SavedViewport = {
+  pan: Point
+  zoom: number
+}
+
 export type HoveredConnection = {
   sourceLabel: string
   targetLabel: string
   relationshipLabel: string
   relationship: 'hierarchy' | 'related'
 }
+
+const savedViewports = new Map<string, SavedViewport>()
+const appliedSearchTokens = new Map<string, number>()
 
 const mapPositions: Record<string, Point> = {
   _mamahtawisiwin: { x: 72, y: 112 },
@@ -212,6 +220,21 @@ function syncMapViewport(cy: Core, focusWordId: string, zoomMode: 'default' | 's
     cy.zoom(Math.min(cy.maxZoom(), cy.zoom() * 1.22))
     cy.center(focusNode)
   }
+
+  cy.panBy({ x: 0, y: zoomMode === 'search' ? 26 : 52 })
+}
+
+function saveMapViewport(cy: Core, viewKey: string) {
+  savedViewports.set(viewKey, {
+    pan: cy.pan(),
+    zoom: cy.zoom(),
+  })
+}
+
+function restoreMapViewport(cy: Core, viewport: SavedViewport) {
+  cy.resize()
+  cy.zoom(Math.max(cy.minZoom(), Math.min(cy.maxZoom(), viewport.zoom)))
+  cy.pan(viewport.pan)
 }
 
 export default function Wordmap({
@@ -232,6 +255,30 @@ export default function Wordmap({
     () => createMapStylesheet({ hierarchyColor, relatedColor }),
     [hierarchyColor, relatedColor],
   )
+  const viewKey = useMemo(
+    () => `${focusWord.id}-${showSemanticGaps ? 'gaps' : 'plain'}`,
+    [focusWord.id, showSemanticGaps],
+  )
+
+  function applyViewport(cy: Core) {
+    const savedViewport = savedViewports.get(viewKey)
+    const hasFreshSearch = searchFocusToken > 0 && appliedSearchTokens.get(viewKey) !== searchFocusToken
+
+    if (hasFreshSearch) {
+      syncMapViewport(cy, focusWord.id, 'search')
+      appliedSearchTokens.set(viewKey, searchFocusToken)
+      saveMapViewport(cy, viewKey)
+      return
+    }
+
+    if (savedViewport) {
+      restoreMapViewport(cy, savedViewport)
+      return
+    }
+
+    syncMapViewport(cy, focusWord.id, 'default')
+    saveMapViewport(cy, viewKey)
+  }
 
   useEffect(() => {
     const cy = cyRef.current
@@ -241,18 +288,18 @@ export default function Wordmap({
     }
 
     const frame = requestAnimationFrame(() => {
-      syncMapViewport(cy, focusWord.id, searchFocusToken > 0 ? 'search' : 'default')
+      applyViewport(cy)
     })
 
     return () => cancelAnimationFrame(frame)
-  }, [focusWord.id, searchFocusToken, showSemanticGaps])
+  }, [focusWord.id, searchFocusToken, showSemanticGaps, viewKey])
 
   return (
     <div className="word-map-canvas word-map-canvas-full">
       <CytoscapeComponent
-        key={`${focusWord.id}-${showSemanticGaps ? 'gaps' : 'plain'}`}
+        key={viewKey}
         elements={elements}
-        layout={{ name: 'preset', fit: true, padding: 18, animate: false }}
+        layout={{ name: 'preset', fit: false, padding: 18, animate: false }}
         stylesheet={mapStylesheet}
         cy={(cy: Core) => {
           cyRef.current = cy
@@ -289,8 +336,12 @@ export default function Wordmap({
             onHoverConnection(null)
           })
 
+          cy.on('pan zoom', () => {
+            saveMapViewport(cy, viewKey)
+          })
+
           requestAnimationFrame(() => {
-            syncMapViewport(cy, focusWord.id, searchFocusToken > 0 ? 'search' : 'default')
+            applyViewport(cy)
           })
         }}
         style={{ width: '100%', height: '100%', background: 'transparent' }}
