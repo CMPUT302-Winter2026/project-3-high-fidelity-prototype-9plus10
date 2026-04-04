@@ -19,7 +19,9 @@ body {
   background:
     radial-gradient(circle at top, rgba(87, 137, 164, 0.4), transparent 28%),
     #14283d;
-  font-family: 'Trebuchet MS', 'Gill Sans', sans-serif;
+  font-family: 'Aptos', 'Segoe UI', 'Trebuchet MS', 'Gill Sans', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 button,

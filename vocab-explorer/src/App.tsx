@@ -1476,7 +1476,13 @@ function WordArtwork({ word }: WordArtworkProps) {
 
 function FancyWebmapArtwork() {
   return (
-    <svg viewBox="0 0 360 320" className="fancy-webmap-art" role="img" aria-label="Decorative word web">
+    <svg
+      viewBox="0 0 360 320"
+      preserveAspectRatio="xMidYMid slice"
+      className="fancy-webmap-art"
+      role="img"
+      aria-label="Decorative word web"
+    >
       <defs>
         <linearGradient id="webAmbient" x1="50%" y1="0%" x2="50%" y2="100%">
           <stop offset="0%" stopColor="rgba(163, 214, 233, 0.12)" />
