@@ -297,12 +297,12 @@ textarea,
   width: 54px;
   height: 54px;
   padding: 0;
-  color: #e2d1f5;
-  background: rgba(166, 219, 225, 0.95);
+  color: #f2d5ef;
+  background: rgba(94, 152, 165, 0.98);
   border-radius: 999px;
   box-shadow:
-    inset 0 0 0 2px rgba(92, 152, 165, 0.92),
-    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 0 0 2px rgba(43, 88, 101, 0.92),
+    inset 0 1px 0 rgba(210, 236, 241, 0.3),
     var(--surface-shadow);
 }
 
@@ -515,22 +515,80 @@ textarea,
   background: transparent;
 }
 
-.map-hover-callout {
+.map-hover-card {
   position: absolute;
   left: 18px;
   right: 18px;
-  bottom: 104px;
+  top: 78px;
   z-index: 2;
-  padding: 10px 14px;
-  border-radius: 16px;
-  background: rgba(247, 247, 247, 0.95);
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: rgba(244, 247, 250, 0.92);
   color: #11243c;
-  border: 1px solid rgba(255, 255, 255, 0.42);
-  box-shadow: var(--surface-shadow-strong);
-  font-size: 0.9rem;
-  line-height: 1.3;
+  border: 1px solid rgba(255, 255, 255, 0.48);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.72),
+    var(--surface-shadow-strong);
   pointer-events: none;
   backdrop-filter: blur(12px);
+  max-width: 250px;
+}
+
+.map-hover-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.map-hover-kicker {
+  color: #557089;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.map-hover-badge {
+  border-radius: 999px;
+  padding: 4px 9px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.map-hover-badge-hierarchy {
+  background: rgba(126, 166, 233, 0.18);
+  color: #2d5ca1;
+}
+
+.map-hover-badge-related {
+  background: rgba(168, 210, 127, 0.2);
+  color: #4b6b24;
+}
+
+.map-hover-path {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 0.96rem;
+  font-weight: 700;
+  color: #18324f;
+}
+
+.map-hover-arrow {
+  color: #6a84a0;
+  font-weight: 600;
+}
+
+.map-hover-description {
+  margin: 0;
+  color: #42586f;
+  font-size: 0.85rem;
+  line-height: 1.35;
 }
 
 .detail-page {
@@ -663,18 +721,39 @@ textarea,
 
 .group-picker {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
   color: #ffffff;
 }
 
-.group-picker span {
+.group-picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.group-picker-header span:first-child {
   flex: 1;
   font-size: 1.1rem;
 }
 
+.group-picker-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .group-picker select {
-  max-width: 170px;
+  flex: 1;
+  max-width: none;
+}
+
+.group-save-button {
+  flex: 0 0 auto;
+  min-width: 118px;
+  padding: 12px 16px;
 }
 
 .notes-panel {
@@ -682,8 +761,42 @@ textarea,
   color: #ffffff;
 }
 
+.notes-editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.notes-editor-label {
+  display: block;
+}
+
+.notes-save-confirmation {
+  border-radius: 999px;
+  border: 1px solid rgba(167, 235, 201, 0.46);
+  background: rgba(167, 235, 201, 0.18);
+  color: #eafff2;
+  padding: 4px 10px;
+  font-size: 0.82rem;
+  line-height: 1;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    0 6px 16px rgba(8, 18, 34, 0.12);
+  opacity: 0;
+  transform: translateY(4px);
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
+}
+
+.notes-save-confirmation-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .notes-panel textarea {
-  margin-top: 6px;
   min-height: 130px;
   resize: vertical;
   color: #111111;
@@ -1131,9 +1244,7 @@ textarea,
   margin-top: 18px;
 }
 
-.group-notes span {
-  display: block;
-  margin-bottom: 10px;
+.group-notes .notes-editor-label {
   font-size: 1.2rem;
 }
 
@@ -1268,6 +1379,90 @@ textarea,
   transform: translateY(-2px);
 }
 
+.confirmation-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(9, 16, 28, 0.22);
+  backdrop-filter: blur(5px);
+}
+
+.confirmation-dialog {
+  width: min(100%, 360px);
+  overflow: hidden;
+  border-radius: 28px;
+  background: rgba(247, 247, 247, 0.98);
+  border: 4px solid #5f96a6;
+  color: #111111;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.82),
+    0 18px 42px rgba(8, 18, 34, 0.24);
+}
+
+.confirmation-title,
+.confirmation-copy,
+.confirmation-message {
+  margin: 0;
+  padding-inline: 20px;
+}
+
+.confirmation-title {
+  padding-top: 12px;
+  padding-bottom: 8px;
+  text-align: center;
+  font-size: 1.18rem;
+  border-bottom: 1px solid rgba(95, 150, 166, 0.32);
+}
+
+.confirmation-copy {
+  padding-top: 10px;
+  color: #9d938f;
+  font-size: 0.98rem;
+  text-align: center;
+}
+
+.confirmation-message {
+  padding-top: 8px;
+  padding-bottom: 12px;
+  color: #3b5162;
+  font-size: 0.98rem;
+  text-align: center;
+}
+
+.confirmation-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 20px 16px;
+}
+
+.confirmation-button {
+  flex: 1;
+  border-radius: 14px;
+  border: 4px solid transparent;
+  padding: 10px 14px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.42),
+    var(--surface-shadow);
+}
+
+.confirmation-button-confirm {
+  background: #a7c7cf;
+  border-color: #5f96a6;
+  color: #081c2c;
+}
+
+.confirmation-button-cancel {
+  background: #f2b1af;
+  border-color: #d86f69;
+  color: #220706;
+}
+
 .circle-icon-button:hover,
 .search-submit:hover,
 .help-tab:hover,
@@ -1279,7 +1474,8 @@ textarea,
 .footer-tab:hover,
 .danger-button:hover,
 .primary-button:hover,
-.logout-button:hover {
+.logout-button:hover,
+.confirmation-button:hover {
   transform: translateY(-1px);
   box-shadow: var(--surface-shadow-strong);
 }
@@ -1295,7 +1491,8 @@ textarea,
 .footer-tab:active,
 .danger-button:active,
 .primary-button:active,
-.logout-button:active {
+.logout-button:active,
+.confirmation-button:active {
   transform: translateY(0);
   box-shadow: var(--press-shadow);
 }
@@ -1359,11 +1556,16 @@ textarea,
 
   .group-picker {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
   }
 
-  .group-picker select {
-    max-width: none;
+  .group-picker-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .group-save-button {
+    width: 100%;
   }
 
   .password-grid,

@@ -1,15 +1,16 @@
 import { useEffect, useMemo, useRef } from 'react'
 import type { Core, ElementDefinition, StylesheetJsonBlock } from 'cytoscape'
 import CytoscapeComponent from 'react-cytoscapejs'
-import Corpus, { getWordLabel, type Word } from './WordType'
+import Corpus, { getWordById, getWordLabel, type Word } from './WordType'
 
 type WordmapProps = {
   focusWord: Word
   onSelectWord: (wordId: string) => void
-  onHoverConnection: (label: string) => void
+  onHoverConnection: (details: HoveredConnection | null) => void
   showSemanticGaps: boolean
   hierarchyColor: string
   relatedColor: string
+  searchFocusToken: number
 }
 
 type WordmapPreviewProps = {
@@ -19,6 +20,13 @@ type WordmapPreviewProps = {
 type Point = {
   x: number
   y: number
+}
+
+export type HoveredConnection = {
+  sourceLabel: string
+  targetLabel: string
+  relationshipLabel: string
+  relationship: 'hierarchy' | 'related'
 }
 
 const mapPositions: Record<string, Point> = {
@@ -133,6 +141,7 @@ function buildMapElements(showSemanticGaps: boolean, focusWordId: string): Eleme
       }
 
       const relationship = getEdgeRelationship(word.id, childId)
+      const childWord = getWordById(childId)
 
       return [
         {
@@ -142,6 +151,8 @@ function buildMapElements(showSemanticGaps: boolean, focusWordId: string): Eleme
             target: childId,
             relationship,
             relationshipLabel: getEdgeRelationshipLabel(relationship),
+            sourceLabel: getWordLabel(word),
+            targetLabel: childWord ? getWordLabel(childWord) : childId,
             isFocusConnection: word.id === focusWordId || childId === focusWordId ? 'true' : 'false',
           },
         },
@@ -183,7 +194,7 @@ function buildPreviewElements(showSemanticGaps: boolean): ElementDefinition[] {
   return [...nodes, ...edges]
 }
 
-function syncMapViewport(cy: Core, focusWordId: string) {
+function syncMapViewport(cy: Core, focusWordId: string, zoomMode: 'default' | 'search' = 'default') {
   cy.resize()
 
   const focusNode = cy.$id(focusWordId)
@@ -194,8 +205,13 @@ function syncMapViewport(cy: Core, focusWordId: string) {
   }
 
   const focusCluster = focusNode.closedNeighborhood().union(focusNode)
-  cy.fit(focusCluster, 96)
+  cy.fit(focusCluster, zoomMode === 'search' ? 54 : 96)
   cy.center(focusNode)
+
+  if (zoomMode === 'search') {
+    cy.zoom(Math.min(cy.maxZoom(), cy.zoom() * 1.22))
+    cy.center(focusNode)
+  }
 }
 
 export default function Wordmap({
@@ -205,6 +221,7 @@ export default function Wordmap({
   showSemanticGaps,
   hierarchyColor,
   relatedColor,
+  searchFocusToken,
 }: WordmapProps) {
   const cyRef = useRef<Core | null>(null)
   const elements = useMemo(
@@ -224,11 +241,11 @@ export default function Wordmap({
     }
 
     const frame = requestAnimationFrame(() => {
-      syncMapViewport(cy, focusWord.id)
+      syncMapViewport(cy, focusWord.id, searchFocusToken > 0 ? 'search' : 'default')
     })
 
     return () => cancelAnimationFrame(frame)
-  }, [focusWord.id, showSemanticGaps])
+  }, [focusWord.id, searchFocusToken, showSemanticGaps])
 
   return (
     <div className="word-map-canvas word-map-canvas-full">
@@ -254,14 +271,26 @@ export default function Wordmap({
 
           cy.on('mouseover', 'edge', (event) => {
             const relationshipLabel = event.target.data('relationshipLabel') as string | undefined
+            const sourceLabel = event.target.data('sourceLabel') as string | undefined
+            const targetLabel = event.target.data('targetLabel') as string | undefined
+            const relationship = event.target.data('relationship') as 'hierarchy' | 'related' | undefined
 
-            if (relationshipLabel) {
-              onHoverConnection(relationshipLabel)
+            if (relationshipLabel && sourceLabel && targetLabel && relationship) {
+              onHoverConnection({
+                sourceLabel,
+                targetLabel,
+                relationshipLabel,
+                relationship,
+              })
             }
           })
 
+          cy.on('mouseout', 'edge', () => {
+            onHoverConnection(null)
+          })
+
           requestAnimationFrame(() => {
-            syncMapViewport(cy, focusWord.id)
+            syncMapViewport(cy, focusWord.id, searchFocusToken > 0 ? 'search' : 'default')
           })
         }}
         style={{ width: '100%', height: '100%', background: 'transparent' }}

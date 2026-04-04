@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import './App.css'
-import Wordmap from './Wordmap'
+import Wordmap, { type HoveredConnection } from './Wordmap'
 import Corpus, {
   findWordByQuery,
   getChildWords,
@@ -26,6 +26,24 @@ type WordGroup = {
   wordIds: string[]
   notes: string
 }
+
+type SearchFocusRequest = {
+  token: number
+  wordId: string
+}
+
+type PendingDeleteAction =
+  | {
+      kind: 'group-word'
+      groupId: string
+      wordId: string
+      wordLabel: string
+    }
+  | {
+      kind: 'group'
+      groupId: string
+      groupName: string
+    }
 
 const semanticSwatches: Swatch[] = [
   { label: 'Rose', value: '#ef7b7b' },
@@ -78,6 +96,11 @@ function App() {
   const [showAddWordsModal, setShowAddWordsModal] = useState(false)
   const [groupWordSearch, setGroupWordSearch] = useState('')
   const [notesByWordId, setNotesByWordId] = useState<Record<string, string>>({})
+  const [pendingDeleteAction, setPendingDeleteAction] = useState<PendingDeleteAction | null>(null)
+  const [searchFocusRequest, setSearchFocusRequest] = useState<SearchFocusRequest>({
+    token: 0,
+    wordId: defaultWord.id,
+  })
 
   const activeWord = getWordById(activeWordId) ?? defaultWord
   const selectedGroup = groups.find((group) => group.id === selectedGroupId) ?? groups[0]
@@ -151,6 +174,10 @@ function App() {
     const nextWord = findWordByQuery(query) ?? defaultWord
     setSearchValue(getWordLabel(nextWord))
     setActiveWordId(nextWord.id)
+    setSearchFocusRequest((current) => ({
+      token: current.token + 1,
+      wordId: nextWord.id,
+    }))
     setScreen('map')
   }
 
@@ -191,9 +218,17 @@ function App() {
     )
   }
 
-  function handleSelectGroup(groupId: string) {
+  function saveActiveWordToGroup(groupId: string): 'saved' | 'already-saved' {
     setSelectedGroupId(groupId)
+
+    const targetGroup = groups.find((group) => group.id === groupId)
+
+    if (!targetGroup || targetGroup.wordIds.includes(activeWord.id)) {
+      return 'already-saved'
+    }
+
     addWordToGroup(groupId, activeWord.id)
+    return 'saved'
   }
 
   function handleCreateGroup() {
@@ -234,34 +269,71 @@ function App() {
     )
   }
 
-  function removeWordFromSelectedGroup(wordId: string) {
-    if (!selectedGroup) {
-      return
-    }
-
+  function removeWordFromGroup(groupId: string, wordId: string) {
     setGroups((currentGroups) =>
       currentGroups.map((group) =>
-        group.id === selectedGroup.id
+        group.id === groupId
           ? { ...group, wordIds: group.wordIds.filter((groupWordId) => groupWordId !== wordId) }
           : group,
       ),
     )
   }
 
-  function deleteSelectedGroup() {
-    if (!selectedGroup) {
-      return
-    }
-
-    const remainingGroups = groups.filter((group) => group.id !== selectedGroup.id)
+  function deleteGroup(groupId: string) {
+    const remainingGroups = groups.filter((group) => group.id !== groupId)
     setGroups(remainingGroups)
 
-    if (remainingGroups[0]) {
+    if (selectedGroupId === groupId && remainingGroups[0]) {
       setSelectedGroupId(remainingGroups[0].id)
     }
 
     setGroupsView('overview')
     setShowAddWordsModal(false)
+  }
+
+  function requestRemoveWordFromSelectedGroup(word: Word) {
+    if (!selectedGroup) {
+      return
+    }
+
+    setPendingDeleteAction({
+      kind: 'group-word',
+      groupId: selectedGroup.id,
+      wordId: word.id,
+      wordLabel: getWordLabel(word),
+    })
+  }
+
+  function requestDeleteSelectedGroup() {
+    if (!selectedGroup) {
+      return
+    }
+
+    setPendingDeleteAction({
+      kind: 'group',
+      groupId: selectedGroup.id,
+      groupName: selectedGroup.name,
+    })
+  }
+
+  function closeDeleteDialog() {
+    setPendingDeleteAction(null)
+  }
+
+  function confirmDeleteAction() {
+    if (!pendingDeleteAction) {
+      return
+    }
+
+    if (pendingDeleteAction.kind === 'group-word') {
+      removeWordFromGroup(pendingDeleteAction.groupId, pendingDeleteAction.wordId)
+    }
+
+    if (pendingDeleteAction.kind === 'group') {
+      deleteGroup(pendingDeleteAction.groupId)
+    }
+
+    setPendingDeleteAction(null)
   }
 
   function renderPage() {
@@ -304,6 +376,7 @@ function App() {
             semanticGaps={semanticGaps}
             hierarchyColor={hierarchyColor}
             relatedColor={relatedColor}
+            searchFocusRequest={searchFocusRequest}
             onSearchValueChange={setSearchValue}
             onSearch={() => openSearchResult(searchValue)}
             onOpenSettings={() => openSettings('map')}
@@ -325,7 +398,7 @@ function App() {
             matchScore={matchScores[activeWord.id] ?? 78}
             onBack={() => setScreen('map')}
             onOpenSettings={() => openSettings('detail')}
-            onSelectGroup={handleSelectGroup}
+            onSaveWordToGroup={saveActiveWordToGroup}
             onNoteChange={(value) =>
               setNotesByWordId((current) => ({ ...current, [activeWord.id]: value }))
             }
@@ -409,9 +482,9 @@ function App() {
               setShowAddWordsModal(false)
               setGroupWordSearch('')
             }}
-            onRemoveWord={removeWordFromSelectedGroup}
+            onRequestRemoveWord={requestRemoveWordFromSelectedGroup}
             onGroupNotesChange={updateGroupNotes}
-            onDeleteGroup={deleteSelectedGroup}
+            onRequestDeleteGroup={requestDeleteSelectedGroup}
             onOpenGroups={openGroupsOverview}
             onOpenHome={openSearchScreen}
           />
@@ -433,6 +506,18 @@ function App() {
 
         <div className="phone-frame">
           {renderPage()}
+          {pendingDeleteAction ? (
+            <ConfirmationDialog
+              title="Are you sure?"
+              message={
+                pendingDeleteAction.kind === 'group-word'
+                  ? `Remove ${pendingDeleteAction.wordLabel} from this group?`
+                  : `Delete ${pendingDeleteAction.groupName} and its notes?`
+              }
+              onConfirm={confirmDeleteAction}
+              onCancel={closeDeleteDialog}
+            />
+          ) : null}
         </div>
       </div>
     </div>
@@ -579,6 +664,7 @@ type MapPageProps = {
   semanticGaps: boolean
   hierarchyColor: string
   relatedColor: string
+  searchFocusRequest: SearchFocusRequest
   onSearchValueChange: (value: string) => void
   onSearch: () => void
   onOpenSettings: () => void
@@ -594,6 +680,7 @@ function MapPage({
   semanticGaps,
   hierarchyColor,
   relatedColor,
+  searchFocusRequest,
   onSearchValueChange,
   onSearch,
   onOpenSettings,
@@ -602,38 +689,11 @@ function MapPage({
   onOpenGroups,
   onOpenHome,
 }: MapPageProps) {
-  const [relationshipHoverMessage, setRelationshipHoverMessage] = useState<string | null>(null)
-  const relationshipHoverTimeoutRef = useRef<number | null>(null)
+  const [hoveredConnection, setHoveredConnection] = useState<HoveredConnection | null>(null)
 
   useEffect(() => {
-    return () => {
-      if (relationshipHoverTimeoutRef.current !== null) {
-        window.clearTimeout(relationshipHoverTimeoutRef.current)
-      }
-    }
-  }, [])
-
-  useEffect(() => {
-    setRelationshipHoverMessage(null)
-
-    if (relationshipHoverTimeoutRef.current !== null) {
-      window.clearTimeout(relationshipHoverTimeoutRef.current)
-      relationshipHoverTimeoutRef.current = null
-    }
+    setHoveredConnection(null)
   }, [word.id])
-
-  function showRelationshipHover(label: string) {
-    setRelationshipHoverMessage(label)
-
-    if (relationshipHoverTimeoutRef.current !== null) {
-      window.clearTimeout(relationshipHoverTimeoutRef.current)
-    }
-
-    relationshipHoverTimeoutRef.current = window.setTimeout(() => {
-      setRelationshipHoverMessage(null)
-      relationshipHoverTimeoutRef.current = null
-    }, 1600)
-  }
 
   return (
     <section className="page map-page has-footer">
@@ -641,10 +701,11 @@ function MapPage({
         <Wordmap
           focusWord={word}
           onSelectWord={onOpenWord}
-          onHoverConnection={showRelationshipHover}
+          onHoverConnection={setHoveredConnection}
           showSemanticGaps={semanticGaps}
           hierarchyColor={hierarchyColor}
           relatedColor={relatedColor}
+          searchFocusToken={searchFocusRequest.wordId === word.id ? searchFocusRequest.token : 0}
         />
 
         <div className="map-top-bar">
@@ -676,9 +737,22 @@ function MapPage({
           </div>
         </div>
 
-        {relationshipHoverMessage ? (
-          <div className="map-hover-callout" aria-live="polite">
-            {relationshipHoverMessage}
+        {hoveredConnection ? (
+          <div className="map-hover-card" aria-live="polite">
+            <div className="map-hover-card-head">
+              <span className="map-hover-kicker">Hovered connection</span>
+              <span className={`map-hover-badge map-hover-badge-${hoveredConnection.relationship}`}>
+                {hoveredConnection.relationship === 'hierarchy' ? 'Hierarchy' : 'Related'}
+              </span>
+            </div>
+            <div className="map-hover-path">
+              <span>{hoveredConnection.sourceLabel}</span>
+              <span className="map-hover-arrow" aria-hidden="true">
+                {hoveredConnection.relationship === 'hierarchy' ? '->' : '~'}
+              </span>
+              <span>{hoveredConnection.targetLabel}</span>
+            </div>
+            <p className="map-hover-description">{hoveredConnection.relationshipLabel}</p>
           </div>
         ) : null}
       </div>
@@ -698,7 +772,7 @@ type WordDetailPageProps = {
   matchScore: number
   onBack: () => void
   onOpenSettings: () => void
-  onSelectGroup: (groupId: string) => void
+  onSaveWordToGroup: (groupId: string) => 'saved' | 'already-saved'
   onNoteChange: (value: string) => void
   onOpenGroups: () => void
   onOpenHome: () => void
@@ -714,11 +788,65 @@ function WordDetailPage({
   matchScore,
   onBack,
   onOpenSettings,
-  onSelectGroup,
+  onSaveWordToGroup,
   onNoteChange,
   onOpenGroups,
   onOpenHome,
 }: WordDetailPageProps) {
+  const [pendingGroupId, setPendingGroupId] = useState('')
+  const [groupSaveMessage, setGroupSaveMessage] = useState('')
+  const saveMessageTimeoutRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    if (saveMessageTimeoutRef.current !== null) {
+      window.clearTimeout(saveMessageTimeoutRef.current)
+      saveMessageTimeoutRef.current = null
+    }
+
+    if (groups.length === 0) {
+      setPendingGroupId('')
+      setGroupSaveMessage('')
+      return
+    }
+
+    const nextSelectedGroupId = groups.some((group) => group.id === selectedGroupId)
+      ? selectedGroupId
+      : groups[0].id
+
+    setPendingGroupId(nextSelectedGroupId)
+    setGroupSaveMessage('')
+  }, [groups, selectedGroupId, word.id])
+
+  useEffect(() => {
+    return () => {
+      if (saveMessageTimeoutRef.current !== null) {
+        window.clearTimeout(saveMessageTimeoutRef.current)
+      }
+    }
+  }, [])
+
+  function showGroupSaveMessage(message: string) {
+    setGroupSaveMessage(message)
+
+    if (saveMessageTimeoutRef.current !== null) {
+      window.clearTimeout(saveMessageTimeoutRef.current)
+    }
+
+    saveMessageTimeoutRef.current = window.setTimeout(() => {
+      setGroupSaveMessage('')
+      saveMessageTimeoutRef.current = null
+    }, 1600)
+  }
+
+  function handleSaveWordToGroup() {
+    if (!pendingGroupId) {
+      return
+    }
+
+    const result = onSaveWordToGroup(pendingGroupId)
+    showGroupSaveMessage(result === 'saved' ? 'Saved' : 'Already saved')
+  }
+
   return (
     <section className="page detail-page has-footer">
       <div className="page-header">
@@ -762,24 +890,49 @@ function WordDetailPage({
       </div>
 
       <div className="group-picker">
-        <span>Add to group?</span>
-        <select value={selectedGroupId} onChange={(event) => onSelectGroup(event.target.value)}>
-          {groups.map((group) => (
-            <option key={group.id} value={group.id}>
-              {group.name}
-            </option>
-          ))}
-        </select>
+        <div className="group-picker-header">
+          <span>Add to group?</span>
+          <span
+            className={`notes-save-confirmation ${groupSaveMessage ? 'notes-save-confirmation-visible' : ''}`}
+            role="status"
+            aria-live="polite"
+          >
+            {groupSaveMessage}
+          </span>
+        </div>
+        <div className="group-picker-controls">
+          <select
+            value={pendingGroupId}
+            onChange={(event) => setPendingGroupId(event.target.value)}
+            disabled={groups.length === 0}
+          >
+            {groups.length > 0 ? (
+              groups.map((group) => (
+                <option key={group.id} value={group.id}>
+                  {group.name}
+                </option>
+              ))
+            ) : (
+              <option value="">No groups available</option>
+            )}
+          </select>
+          <button
+            type="button"
+            className="primary-button group-save-button"
+            onClick={handleSaveWordToGroup}
+            disabled={!pendingGroupId}
+          >
+            Save Word
+          </button>
+        </div>
       </div>
 
-      <label className="notes-panel">
-        <span>Notes:</span>
-        <textarea
-          value={noteValue}
-          onChange={(event) => onNoteChange(event.target.value)}
-          placeholder="Add pronunciation notes, examples, or classroom reminders."
-        />
-      </label>
+      <NotesEditor
+        className="notes-panel"
+        value={noteValue}
+        onChange={onNoteChange}
+        placeholder="Add pronunciation notes, examples, or classroom reminders."
+      />
 
       <FooterNav onOpenGroups={onOpenGroups} onOpenHome={onOpenHome} />
     </section>
@@ -1164,9 +1317,9 @@ type GroupsPageProps = {
   onCloseAddWords: () => void
   onGroupWordSearchChange: (value: string) => void
   onAddWord: (wordId: string) => void
-  onRemoveWord: (wordId: string) => void
+  onRequestRemoveWord: (word: Word) => void
   onGroupNotesChange: (value: string) => void
-  onDeleteGroup: () => void
+  onRequestDeleteGroup: () => void
   onOpenGroups: () => void
   onOpenHome: () => void
 }
@@ -1194,9 +1347,9 @@ function GroupsPage({
   onCloseAddWords,
   onGroupWordSearchChange,
   onAddWord,
-  onRemoveWord,
+  onRequestRemoveWord,
   onGroupNotesChange,
-  onDeleteGroup,
+  onRequestDeleteGroup,
   onOpenGroups,
   onOpenHome,
 }: GroupsPageProps) {
@@ -1262,7 +1415,7 @@ function GroupsPage({
                   className="group-remove-button"
                   onClick={(event) => {
                     event.stopPropagation()
-                    onRemoveWord(word.id)
+                    onRequestRemoveWord(word)
                   }}
                   aria-label={`Remove ${getWordLabel(word)}`}
                 >
@@ -1276,16 +1429,14 @@ function GroupsPage({
             Add More Words +
           </button>
 
-          <label className="group-notes">
-            <span>Notes:</span>
-            <textarea
-              value={selectedGroup.notes}
-              onChange={(event) => onGroupNotesChange(event.target.value)}
-              placeholder="Tap here to add notes..."
-            />
-          </label>
+          <NotesEditor
+            className="group-notes"
+            value={selectedGroup.notes}
+            onChange={onGroupNotesChange}
+            placeholder="Tap here to add notes..."
+          />
 
-          <button type="button" className="delete-group-button" onClick={onDeleteGroup}>
+          <button type="button" className="delete-group-button" onClick={onRequestDeleteGroup}>
             Delete Group
           </button>
         </>
@@ -1383,6 +1534,89 @@ function FooterNav({ active, onOpenGroups, onOpenHome }: FooterNavProps) {
         Home
       </button>
     </nav>
+  )
+}
+
+type NotesEditorProps = {
+  className: string
+  value: string
+  onChange: (value: string) => void
+  placeholder: string
+}
+
+function NotesEditor({ className, value, onChange, placeholder }: NotesEditorProps) {
+  const [showSavedNotice, setShowSavedNotice] = useState(false)
+  const saveNoticeTimeoutRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (saveNoticeTimeoutRef.current !== null) {
+        window.clearTimeout(saveNoticeTimeoutRef.current)
+      }
+    }
+  }, [])
+
+  function handleChange(nextValue: string) {
+    onChange(nextValue)
+    setShowSavedNotice(true)
+
+    if (saveNoticeTimeoutRef.current !== null) {
+      window.clearTimeout(saveNoticeTimeoutRef.current)
+    }
+
+    saveNoticeTimeoutRef.current = window.setTimeout(() => {
+      setShowSavedNotice(false)
+      saveNoticeTimeoutRef.current = null
+    }, 1600)
+  }
+
+  return (
+    <label className={`${className} notes-editor`}>
+      <div className="notes-editor-header">
+        <span className="notes-editor-label">Notes:</span>
+        <span
+          className={`notes-save-confirmation ${showSavedNotice ? 'notes-save-confirmation-visible' : ''}`}
+          role="status"
+          aria-live="polite"
+        >
+          {showSavedNotice ? 'Saved' : ''}
+        </span>
+      </div>
+      <textarea
+        value={value}
+        onChange={(event) => handleChange(event.target.value)}
+        placeholder={placeholder}
+      />
+    </label>
+  )
+}
+
+type ConfirmationDialogProps = {
+  title: string
+  message: string
+  onConfirm: () => void
+  onCancel: () => void
+}
+
+function ConfirmationDialog({ title, message, onConfirm, onCancel }: ConfirmationDialogProps) {
+  return (
+    <div className="confirmation-backdrop">
+      <div className="confirmation-dialog" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title">
+        <h2 id="confirm-title" className="confirmation-title">
+          {title}
+        </h2>
+        <p className="confirmation-copy">The following action cannot be undone.</p>
+        <p className="confirmation-message">{message}</p>
+        <div className="confirmation-actions">
+          <button type="button" className="confirmation-button confirmation-button-confirm" onClick={onConfirm}>
+            Yes
+          </button>
+          <button type="button" className="confirmation-button confirmation-button-cancel" onClick={onCancel}>
+            No
+          </button>
+        </div>
+      </div>
+    </div>
   )
 }
 
