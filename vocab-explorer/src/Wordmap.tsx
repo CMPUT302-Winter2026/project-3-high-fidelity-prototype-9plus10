@@ -7,6 +7,8 @@ type WordmapProps = {
   focusWord: Word
   onSelectWord: (wordId: string) => void
   showSemanticGaps: boolean
+  hierarchyColor: string
+  relatedColor: string
 }
 
 type WordmapPreviewProps = {
@@ -22,7 +24,7 @@ const mapPositions: Record<string, Point> = {
   _mamahtawisiwin: { x: 72, y: 112 },
   _animal: { x: 250, y: 112 },
   _dog: { x: 170, y: 254 },
-  _panda: { x: 316, y: 188 },
+  _panda: { x: 344, y: 214 },
   _bark: { x: 12, y: 392 },
   _puppy: { x: 288, y: 382 },
 }
@@ -62,8 +64,40 @@ function getNodeVariant(wordId: string): 'focus' | 'ellipse' | 'diamond' | 'defa
   return 'default'
 }
 
+function getFocusContext(wordId: string) {
+  const parentIds = new Set<string>()
+  const childIds = new Set<string>()
+
+  Corpus.Words.forEach((word) => {
+    if (word.id === wordId) {
+      word.hypo.forEach((childId) => childIds.add(childId))
+    }
+
+    if (word.hypo.includes(wordId)) {
+      parentIds.add(word.id)
+    }
+  })
+
+  const contextIds = new Set([...parentIds, ...childIds])
+
+  return { parentIds, childIds, contextIds }
+}
+
+function getEdgeRelationship(sourceId: string, targetId: string): 'hierarchy' | 'related' {
+  if (sourceId === '_dog' && targetId === '_bark') {
+    return 'related'
+  }
+
+  if (sourceId === '_animal' && (targetId === '_panda' || targetId === '_mamahtawisiwin')) {
+    return 'related'
+  }
+
+  return 'hierarchy'
+}
+
 function buildMapElements(showSemanticGaps: boolean, focusWordId: string): ElementDefinition[] {
   const words = Corpus.Words
+  const { contextIds } = getFocusContext(focusWordId)
 
   const nodes: ElementDefinition[] = words.map((word) => ({
     data: {
@@ -72,6 +106,7 @@ function buildMapElements(showSemanticGaps: boolean, focusWordId: string): Eleme
       label: buildNodeLabel(word),
       variant: getNodeVariant(word.id),
       isFocus: word.id === focusWordId ? 'true' : 'false',
+      isContext: contextIds.has(word.id) ? 'true' : 'false',
       hasGap: showSemanticGaps && (!word.english || !word.cree) ? 'true' : 'false',
     },
     position: mapPositions[word.id] ?? { x: 168, y: 220 },
@@ -83,6 +118,8 @@ function buildMapElements(showSemanticGaps: boolean, focusWordId: string): Eleme
         id: `${word.id}-${childId}`,
         source: word.id,
         target: childId,
+        relationship: getEdgeRelationship(word.id, childId),
+        isFocusConnection: word.id === focusWordId || childId === focusWordId ? 'true' : 'false',
       },
     })),
   )
@@ -112,6 +149,7 @@ function buildPreviewElements(showSemanticGaps: boolean): ElementDefinition[] {
           id: `preview-${word.id}-${childId}`,
           source: word.id,
           target: childId,
+          relationship: getEdgeRelationship(word.id, childId),
         },
       })),
   )
@@ -119,11 +157,36 @@ function buildPreviewElements(showSemanticGaps: boolean): ElementDefinition[] {
   return [...nodes, ...edges]
 }
 
-export default function Wordmap({ focusWord, onSelectWord, showSemanticGaps }: WordmapProps) {
+function syncMapViewport(cy: Core, focusWordId: string) {
+  cy.resize()
+
+  const focusNode = cy.$id(focusWordId)
+
+  if (focusNode.length === 0) {
+    cy.fit(cy.elements(), 18)
+    return
+  }
+
+  const focusCluster = focusNode.closedNeighborhood().union(focusNode)
+  cy.fit(focusCluster, 96)
+  cy.center(focusNode)
+}
+
+export default function Wordmap({
+  focusWord,
+  onSelectWord,
+  showSemanticGaps,
+  hierarchyColor,
+  relatedColor,
+}: WordmapProps) {
   const cyRef = useRef<Core | null>(null)
   const elements = useMemo(
     () => buildMapElements(showSemanticGaps, focusWord.id),
     [focusWord.id, showSemanticGaps],
+  )
+  const mapStylesheet = useMemo(
+    () => createMapStylesheet({ hierarchyColor, relatedColor }),
+    [hierarchyColor, relatedColor],
   )
 
   useEffect(() => {
@@ -134,13 +197,7 @@ export default function Wordmap({ focusWord, onSelectWord, showSemanticGaps }: W
     }
 
     const frame = requestAnimationFrame(() => {
-      cy.resize()
-      cy.fit(cy.elements(), 12)
-      const focusNode = cy.$id(focusWord.id)
-
-      if (focusNode.length > 0) {
-        cy.center(focusNode)
-      }
+      syncMapViewport(cy, focusWord.id)
     })
 
     return () => cancelAnimationFrame(frame)
@@ -169,13 +226,7 @@ export default function Wordmap({ focusWord, onSelectWord, showSemanticGaps }: W
           })
 
           requestAnimationFrame(() => {
-            cy.resize()
-            cy.fit(cy.elements(), 12)
-            const focusNode = cy.$id(focusWord.id)
-
-            if (focusNode.length > 0) {
-              cy.center(focusNode)
-            }
+            syncMapViewport(cy, focusWord.id)
           })
         }}
         style={{ width: '100%', height: '100%', background: 'transparent' }}
@@ -206,83 +257,147 @@ export function WordmapPreview({ showSemanticGaps }: WordmapPreviewProps) {
   )
 }
 
-const mapStylesheet: StylesheetJsonBlock[] = [
-  {
-    selector: 'node',
-    style: {
-      label: 'data(label)',
-      width: 108,
-      height: 60,
-      padding: '8px',
-      shape: 'round-rectangle',
-      'background-color': '#ccb8eb',
-      color: '#101422',
-      'font-size': 12,
-      'font-weight': 500,
-      'text-valign': 'center',
-      'text-halign': 'center',
-      'text-wrap': 'wrap',
-      'border-width': 3,
-      'border-color': '#9e80cb',
-      'text-max-width': '98px',
-      'line-height': 1,
-      'text-outline-width': 0,
+function createMapStylesheet({
+  hierarchyColor,
+  relatedColor,
+}: {
+  hierarchyColor: string
+  relatedColor: string
+}): StylesheetJsonBlock[] {
+  return [
+    {
+      selector: 'node',
+      style: {
+        label: 'data(label)',
+        width: 108,
+        height: 60,
+        padding: '8px',
+        shape: 'round-rectangle',
+        'background-color': '#ccb8eb',
+        color: '#101422',
+        'font-size': 12,
+        'font-weight': 500,
+        'text-valign': 'center',
+        'text-halign': 'center',
+        'text-wrap': 'wrap',
+        'border-width': 3,
+        'border-color': '#9e80cb',
+        'text-max-width': '98px',
+        'line-height': 1,
+        'text-outline-width': 0,
+      },
     },
-  },
-  {
-    selector: 'node[variant = "focus"]',
-    style: {
-      'background-color': '#cdb8ee',
-      'border-color': '#8a6bc8',
-      'border-width': 5,
+    {
+      selector: 'node[variant = "focus"]',
+      style: {
+        'background-color': '#cdb8ee',
+        'border-color': '#8a6bc8',
+        'border-width': 5,
+      },
     },
-  },
-  {
-    selector: 'node[variant = "ellipse"]',
-    style: {
-      shape: 'ellipse',
-      width: 94,
-      height: 54,
-      'background-color': '#a7c8ec',
-      'border-color': '#4e90d4',
+    {
+      selector: 'node[variant = "ellipse"]',
+      style: {
+        shape: 'ellipse',
+        width: 94,
+        height: 54,
+        'background-color': '#a7c8ec',
+        'border-color': '#4e90d4',
+      },
     },
-  },
-  {
-    selector: 'node[variant = "diamond"]',
-    style: {
-      shape: 'diamond',
-      width: 102,
-      height: 56,
-      'background-color': '#dea1c4',
-      'border-color': '#b96596',
-      'font-size': 11,
-      'text-max-width': '82px',
+    {
+      selector: 'node[variant = "diamond"]',
+      style: {
+        shape: 'diamond',
+        width: 102,
+        height: 56,
+        'background-color': '#dea1c4',
+        'border-color': '#b96596',
+        'font-size': 11,
+        'text-max-width': '82px',
+      },
     },
-  },
-  {
-    selector: 'node[isFocus = "true"]',
-    style: {
-      'background-color': '#cdb8ee',
-      'border-color': '#8a6bc8',
-      'border-width': 4,
+    {
+      selector: 'node[isFocus = "true"]',
+      style: {
+        width: 138,
+        height: 76,
+        padding: '12px',
+        'border-width': 5,
+        'font-size': 14,
+        'font-weight': 700,
+        'text-max-width': '124px',
+      },
     },
-  },
-  {
-    selector: 'node[hasGap = "true"]',
-    style: {
-      'border-style': 'solid',
+    {
+      selector: 'node[isContext = "true"][isFocus = "false"]',
+      style: {
+        'border-width': 3.5,
+        opacity: 0.96,
+      },
     },
-  },
-  {
-    selector: 'edge',
-    style: {
-      width: 3,
-      'line-color': '#d6dce3',
-      'target-arrow-shape': 'none',
-      'curve-style': 'straight',
+    {
+      selector: 'node[isContext = "false"][isFocus = "false"]',
+      style: {
+        opacity: 0.72,
+      },
     },
-  },
-]
+    {
+      selector: 'node[hasGap = "true"]',
+      style: {
+        'border-style': 'solid',
+      },
+    },
+    {
+      selector: 'edge',
+      style: {
+        width: 2.5,
+        'line-color': 'rgba(214, 220, 227, 0.54)',
+        'target-arrow-shape': 'triangle',
+        'target-arrow-color': 'rgba(214, 220, 227, 0.54)',
+        'arrow-scale': 1.1,
+        opacity: 0.7,
+        'curve-style': 'straight',
+      },
+    },
+    {
+      selector: 'edge[relationship = "hierarchy"]',
+      style: {
+        width: 3.2,
+        'line-color': hierarchyColor,
+        'target-arrow-color': hierarchyColor,
+        'target-arrow-shape': 'triangle',
+        'arrow-scale': 1.15,
+      },
+    },
+    {
+      selector: 'edge[relationship = "related"]',
+      style: {
+        width: 2.8,
+        'line-color': relatedColor,
+        'target-arrow-shape': 'none',
+        'target-arrow-color': relatedColor,
+        'line-style': 'dashed',
+        opacity: 0.88,
+      },
+    },
+    {
+      selector: 'edge[isFocusConnection = "true"]',
+      style: {
+        width: 4.6,
+        'arrow-scale': 1.3,
+        opacity: 1,
+      },
+    },
+    {
+      selector: 'edge[relationship = "related"][isFocusConnection = "true"]',
+      style: {
+        'target-arrow-shape': 'none',
+        'line-style': 'dashed',
+      },
+    },
+  ]
+}
 
 const previewStylesheet: StylesheetJsonBlock[] = [
   {
@@ -311,9 +426,18 @@ const previewStylesheet: StylesheetJsonBlock[] = [
     style: {
       width: 2.2,
       'line-color': 'rgba(231, 231, 231, 0.48)',
-      'target-arrow-shape': 'none',
+      'target-arrow-color': 'rgba(231, 231, 231, 0.48)',
+      'target-arrow-shape': 'triangle',
+      'arrow-scale': 0.9,
       'curve-style': 'straight',
       opacity: 0.62,
+    },
+  },
+  {
+    selector: 'edge[relationship = "related"]',
+    style: {
+      'target-arrow-shape': 'none',
+      'line-style': 'dashed',
     },
   },
 ]

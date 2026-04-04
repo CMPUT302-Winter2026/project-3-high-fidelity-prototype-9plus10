@@ -11,7 +11,8 @@ import Corpus, {
   type Word,
 } from './WordType'
 
-type Screen = 'login' | 'register' | 'search' | 'map' | 'detail' | 'settings' | 'groups'
+type Screen = 'login' | 'register' | 'search' | 'map' | 'detail' | 'settings' | 'groups' | 'help'
+type HelpSection = 'how' | 'legend' | 'web' | 'groups' | 'about'
 
 type Swatch = {
   label: string
@@ -25,22 +26,13 @@ type WordGroup = {
   notes: string
 }
 
-const englishSwatches: Swatch[] = [
+const semanticSwatches: Swatch[] = [
   { label: 'Rose', value: '#ef7b7b' },
   { label: 'Sun', value: '#f7b85d' },
   { label: 'Gold', value: '#f6d268' },
   { label: 'Leaf', value: '#a8d27f' },
   { label: 'Sky', value: '#7ea6e9' },
   { label: 'Blush', value: '#d8b0c8' },
-]
-
-const creeSwatches: Swatch[] = [
-  { label: 'Coral', value: '#ee6f70' },
-  { label: 'Peach', value: '#f5b667' },
-  { label: 'Honey', value: '#f6cf63' },
-  { label: 'Moss', value: '#9ecd7c' },
-  { label: 'Blue', value: '#6d99e9' },
-  { label: 'Plum', value: '#cba0bd' },
 ]
 
 const initialGroups: WordGroup[] = [
@@ -67,13 +59,15 @@ function App() {
 
   const [screen, setScreen] = useState<Screen>('login')
   const [previousScreen, setPreviousScreen] = useState<Screen>('search')
+  const [helpReturnScreen, setHelpReturnScreen] = useState<Screen>('search')
+  const [helpSection, setHelpSection] = useState<HelpSection>('how')
   const [searchValue, setSearchValue] = useState('')
   const [activeWordId, setActiveWordId] = useState(defaultWord.id)
-  const [showHelp, setShowHelp] = useState(false)
   const [semanticGaps, setSemanticGaps] = useState(true)
   const [fontSize, setFontSize] = useState(18)
-  const [englishColor, setEnglishColor] = useState(englishSwatches[4].value)
-  const [creeColor, setCreeColor] = useState(creeSwatches[5].value)
+  const [contrastColor, setContrastColor] = useState(semanticSwatches[0].value)
+  const [hierarchyColor, setHierarchyColor] = useState(semanticSwatches[4].value)
+  const [relatedColor, setRelatedColor] = useState(semanticSwatches[3].value)
   const [groups, setGroups] = useState<WordGroup[]>(initialGroups)
   const [selectedGroupId, setSelectedGroupId] = useState(initialGroups[0].id)
   const [groupsView, setGroupsView] = useState<'overview' | 'detail'>('overview')
@@ -134,10 +128,11 @@ function App() {
     () =>
       ({
         '--font-scale': `${fontSize}px`,
-        '--english-chip': englishColor,
-        '--cree-chip': creeColor,
+        '--semantic-color-1': contrastColor,
+        '--semantic-color-2': hierarchyColor,
+        '--semantic-color-3': relatedColor,
       }) as CSSProperties,
-    [creeColor, englishColor, fontSize],
+    [contrastColor, fontSize, hierarchyColor, relatedColor],
   )
 
   function openSettings(from: Screen) {
@@ -145,18 +140,22 @@ function App() {
     setScreen('settings')
   }
 
+  function openHelp(from: Screen, nextSection: HelpSection = 'how') {
+    setHelpReturnScreen(from)
+    setHelpSection(nextSection)
+    setScreen('help')
+  }
+
   function openSearchResult(query: string) {
     const nextWord = findWordByQuery(query) ?? defaultWord
     setSearchValue(getWordLabel(nextWord))
     setActiveWordId(nextWord.id)
     setScreen('map')
-    setShowHelp(false)
   }
 
   function openSearchScreen() {
     setSearchValue('')
     setScreen('search')
-    setShowHelp(false)
   }
 
   function openGroupsOverview() {
@@ -291,7 +290,7 @@ function App() {
             onSearchValueChange={setSearchValue}
             onSearch={() => openSearchResult(searchValue)}
             onOpenSettings={() => openSettings('search')}
-            onToggleHelp={() => setShowHelp((current) => !current)}
+            onOpenHelp={() => openHelp('search')}
             onOpenGroups={openGroupsOverview}
             onOpenHome={openSearchScreen}
           />
@@ -302,10 +301,12 @@ function App() {
             word={activeWord}
             searchValue={searchValue}
             semanticGaps={semanticGaps}
+            hierarchyColor={hierarchyColor}
+            relatedColor={relatedColor}
             onSearchValueChange={setSearchValue}
             onSearch={() => openSearchResult(searchValue)}
             onOpenSettings={() => openSettings('map')}
-            onToggleHelp={() => setShowHelp((current) => !current)}
+            onOpenHelp={() => openHelp('map', 'web')}
             onOpenWord={openWordDetail}
             onOpenGroups={openGroupsOverview}
             onOpenHome={openSearchScreen}
@@ -335,17 +336,31 @@ function App() {
           <SettingsPage
             semanticGaps={semanticGaps}
             fontSize={fontSize}
-            englishColor={englishColor}
-            creeColor={creeColor}
+            contrastColor={contrastColor}
+            hierarchyColor={hierarchyColor}
+            relatedColor={relatedColor}
             onBack={() => setScreen(previousScreen)}
             onToggleSemanticGaps={() => setSemanticGaps((current) => !current)}
             onFontSizeChange={setFontSize}
-            onSelectEnglishColor={setEnglishColor}
-            onSelectCreeColor={setCreeColor}
+            onSelectContrastColor={setContrastColor}
+            onSelectHierarchyColor={setHierarchyColor}
+            onSelectRelatedColor={setRelatedColor}
             onLogOut={() => {
-              setShowHelp(false)
               setScreen('login')
             }}
+            onOpenGroups={openGroupsOverview}
+            onOpenHome={openSearchScreen}
+          />
+        )
+      case 'help':
+        return (
+          <HelpPage
+            activeSection={helpSection}
+            contrastColor={contrastColor}
+            hierarchyColor={hierarchyColor}
+            relatedColor={relatedColor}
+            onBack={() => setScreen(helpReturnScreen)}
+            onSelectSection={setHelpSection}
             onOpenGroups={openGroupsOverview}
             onOpenHome={openSearchScreen}
           />
@@ -403,8 +418,6 @@ function App() {
     }
   }
 
-  const showHelpCard = showHelp && ['search', 'map', 'detail'].includes(screen)
-
   return (
     <div className="app-shell" style={shellStyle}>
       <div className="phone-shell">
@@ -416,13 +429,7 @@ function App() {
         </div>
 
         <div className="phone-frame">
-        {showHelpCard ? (
-          <aside className="help-card">
-            <strong>Flow</strong>
-            <p>Log in or register, search a word, open the word map, then tap a node to reach its info page.</p>
-          </aside>
-        ) : null}
-        {renderPage()}
+          {renderPage()}
         </div>
       </div>
     </div>
@@ -507,7 +514,7 @@ type SearchPageProps = {
   onSearchValueChange: (value: string) => void
   onSearch: () => void
   onOpenSettings: () => void
-  onToggleHelp: () => void
+  onOpenHelp: () => void
   onOpenGroups: () => void
   onOpenHome: () => void
 }
@@ -517,14 +524,14 @@ function SearchPage({
   onSearchValueChange,
   onSearch,
   onOpenSettings,
-  onToggleHelp,
+  onOpenHelp,
   onOpenGroups,
   onOpenHome,
 }: SearchPageProps) {
   return (
     <section className="page search-page has-footer">
       <div className="top-actions">
-        <CircleIconButton label="Help" onClick={onToggleHelp}>
+        <CircleIconButton label="Help" onClick={onOpenHelp}>
           <HelpIcon />
         </CircleIconButton>
         <CircleIconButton label="Settings" onClick={onOpenSettings}>
@@ -567,10 +574,12 @@ type MapPageProps = {
   word: Word
   searchValue: string
   semanticGaps: boolean
+  hierarchyColor: string
+  relatedColor: string
   onSearchValueChange: (value: string) => void
   onSearch: () => void
   onOpenSettings: () => void
-  onToggleHelp: () => void
+  onOpenHelp: () => void
   onOpenWord: (wordId: string) => void
   onOpenGroups: () => void
   onOpenHome: () => void
@@ -580,10 +589,12 @@ function MapPage({
   word,
   searchValue,
   semanticGaps,
+  hierarchyColor,
+  relatedColor,
   onSearchValueChange,
   onSearch,
   onOpenSettings,
-  onToggleHelp,
+  onOpenHelp,
   onOpenWord,
   onOpenGroups,
   onOpenHome,
@@ -591,7 +602,13 @@ function MapPage({
   return (
     <section className="page map-page has-footer">
       <div className="map-stage">
-        <Wordmap focusWord={word} onSelectWord={onOpenWord} showSemanticGaps={semanticGaps} />
+        <Wordmap
+          focusWord={word}
+          onSelectWord={onOpenWord}
+          showSemanticGaps={semanticGaps}
+          hierarchyColor={hierarchyColor}
+          relatedColor={relatedColor}
+        />
 
         <div className="map-top-bar">
           <form
@@ -613,7 +630,7 @@ function MapPage({
           </form>
 
           <div className="page-header-actions map-header-actions">
-            <CircleIconButton label="Help" onClick={onToggleHelp}>
+            <CircleIconButton label="Help" onClick={onOpenHelp}>
               <HelpIcon />
             </CircleIconButton>
             <CircleIconButton label="Settings" onClick={onOpenSettings}>
@@ -726,13 +743,15 @@ function WordDetailPage({
 type SettingsPageProps = {
   semanticGaps: boolean
   fontSize: number
-  englishColor: string
-  creeColor: string
+  contrastColor: string
+  hierarchyColor: string
+  relatedColor: string
   onBack: () => void
   onToggleSemanticGaps: () => void
   onFontSizeChange: (value: number) => void
-  onSelectEnglishColor: (value: string) => void
-  onSelectCreeColor: (value: string) => void
+  onSelectContrastColor: (value: string) => void
+  onSelectHierarchyColor: (value: string) => void
+  onSelectRelatedColor: (value: string) => void
   onLogOut: () => void
   onOpenGroups: () => void
   onOpenHome: () => void
@@ -741,13 +760,15 @@ type SettingsPageProps = {
 function SettingsPage({
   semanticGaps,
   fontSize,
-  englishColor,
-  creeColor,
+  contrastColor,
+  hierarchyColor,
+  relatedColor,
   onBack,
   onToggleSemanticGaps,
   onFontSizeChange,
-  onSelectEnglishColor,
-  onSelectCreeColor,
+  onSelectContrastColor,
+  onSelectHierarchyColor,
+  onSelectRelatedColor,
   onLogOut,
   onOpenGroups,
   onOpenHome,
@@ -774,6 +795,61 @@ function SettingsPage({
         </button>
       </div>
 
+      <div className="settings-card colors-card">
+        <span>Connection Colors</span>
+
+        <div className="swatch-row">
+          <div className="swatch-copy">
+            <strong>Color 1</strong>
+            <small>Synonyms / Antonyms</small>
+          </div>
+          <div className="swatch-list">
+            {semanticSwatches.map((swatch) => (
+              <SwatchButton
+                key={`contrast-${swatch.label}`}
+                swatch={swatch}
+                selected={swatch.value === contrastColor}
+                onSelect={onSelectContrastColor}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="swatch-row">
+          <div className="swatch-copy">
+            <strong>Color 2</strong>
+            <small>Hypernyms / Hyponyms</small>
+          </div>
+          <div className="swatch-list">
+            {semanticSwatches.map((swatch) => (
+              <SwatchButton
+                key={`hierarchy-${swatch.label}`}
+                swatch={swatch}
+                selected={swatch.value === hierarchyColor}
+                onSelect={onSelectHierarchyColor}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="swatch-row">
+          <div className="swatch-copy">
+            <strong>Color 3</strong>
+            <small>Related / Associative</small>
+          </div>
+          <div className="swatch-list">
+            {semanticSwatches.map((swatch) => (
+              <SwatchButton
+                key={`related-${swatch.label}`}
+                swatch={swatch}
+                selected={swatch.value === relatedColor}
+                onSelect={onSelectRelatedColor}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+
       <div className="settings-card">
         <div className="setting-row">
           <span>Text Size</span>
@@ -792,63 +868,201 @@ function SettingsPage({
         </div>
       </div>
 
-      <div className="settings-card colors-card">
-        <span>Colors</span>
-        <div className="swatch-row">
-          <strong>English:</strong>
-          <div className="swatch-list">
-            {englishSwatches.map((swatch) => (
-              <SwatchButton
-                key={swatch.label}
-                swatch={swatch}
-                selected={swatch.value === englishColor}
-                onSelect={onSelectEnglishColor}
-              />
-            ))}
-          </div>
+      <div className="settings-card password-card">
+        <strong>Change Password</strong>
+
+        <div className="password-grid">
+          <label className="field-label compact-field">
+            <span>Old Password:</span>
+            <input type="password" defaultValue="********" />
+          </label>
+
+          <label className="field-label compact-field">
+            <span>New Password:</span>
+            <input type="password" defaultValue="**********" />
+          </label>
         </div>
 
-        <div className="swatch-row">
-          <strong>Cree:</strong>
-          <div className="swatch-list">
-            {creeSwatches.map((swatch) => (
-              <SwatchButton
-                key={swatch.label}
-                swatch={swatch}
-                selected={swatch.value === creeColor}
-                onSelect={onSelectCreeColor}
-              />
-            ))}
-          </div>
+        <div className="password-grid password-grid-reset">
+          <label className="field-label compact-field">
+            <span>Confirm Password:</span>
+            <input type="password" defaultValue="**********" />
+          </label>
+
+          <button type="button" className="danger-button">
+            Submit
+          </button>
         </div>
-      </div>
-
-      <div className="password-grid">
-        <label className="field-label compact-field">
-          <span>Old Password:</span>
-          <input type="password" defaultValue="********" />
-        </label>
-
-        <label className="field-label compact-field">
-          <span>New Password:</span>
-          <input type="password" defaultValue="**********" />
-        </label>
-      </div>
-
-      <div className="password-grid password-grid-reset">
-        <label className="field-label compact-field">
-          <span>Confirm Password:</span>
-          <input type="password" defaultValue="**********" />
-        </label>
-
-        <button type="button" className="danger-button">
-          Reset Password
-        </button>
       </div>
 
       <button type="button" className="logout-button" onClick={onLogOut}>
         Log Out
       </button>
+
+      <FooterNav onOpenGroups={onOpenGroups} onOpenHome={onOpenHome} />
+    </section>
+  )
+}
+
+type HelpPageProps = {
+  activeSection: HelpSection
+  contrastColor: string
+  hierarchyColor: string
+  relatedColor: string
+  onBack: () => void
+  onSelectSection: (section: HelpSection) => void
+  onOpenGroups: () => void
+  onOpenHome: () => void
+}
+
+function HelpPage({
+  activeSection,
+  contrastColor,
+  hierarchyColor,
+  relatedColor,
+  onBack,
+  onSelectSection,
+  onOpenGroups,
+  onOpenHome,
+}: HelpPageProps) {
+  const tabs: Array<{ id: HelpSection; label: string }> = [
+    { id: 'how', label: 'How to use' },
+    { id: 'legend', label: 'Legend' },
+    { id: 'web', label: 'Word Web' },
+    { id: 'groups', label: 'Groups' },
+    { id: 'about', label: 'About Us' },
+  ]
+
+  return (
+    <section className="page help-page has-footer">
+      <div className="page-header">
+        <IconButton label="Back" onClick={onBack}>
+          <BackIcon />
+        </IconButton>
+
+        <div className="settings-title">Help</div>
+      </div>
+
+      <div className="help-tab-grid">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            className={`help-tab ${activeSection === tab.id ? 'help-tab-active' : ''}`}
+            onClick={() => onSelectSection(tab.id)}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="help-sheet">
+        {activeSection === 'how' ? (
+          <>
+            <p>
+              Vocabulary Explorer helps you understand how English and Cree words connect.
+            </p>
+            <p>
+              Start on the Home page to search for a word, then open the Word Web to see nearby
+              meanings and relationships.
+            </p>
+            <p>
+              Tap any node in the web to open the detailed word page, where you can review the word,
+              add notes, and place it into a group.
+            </p>
+            <p>
+              Use Groups to organize saved words for lesson plans, revision, or classroom activities.
+            </p>
+          </>
+        ) : null}
+
+        {activeSection === 'legend' ? (
+          <>
+            <div className="help-legend-shapes">
+              <div className="help-shape help-shape-both">English &amp; Cree</div>
+              <div className="help-shape help-shape-cree">Cree Only</div>
+              <div className="help-shape help-shape-english">English Only</div>
+            </div>
+
+            <p>
+              Rounded boxes show words available in both languages. Diamonds show Cree-only words,
+              and circles show English-only words.
+            </p>
+
+            <div className="help-connection-list">
+              <div className="help-connection-item">
+                <span className="help-connection-line" style={{ ['--sample-color' as string]: contrastColor }} />
+                <span>Color 1: synonyms / antonyms</span>
+              </div>
+              <div className="help-connection-item">
+                <span
+                  className="help-connection-line help-connection-line-arrow"
+                  style={{ ['--sample-color' as string]: hierarchyColor }}
+                />
+                <span>Color 2: hypernyms / hyponyms</span>
+              </div>
+              <div className="help-connection-item">
+                <span
+                  className="help-connection-line help-connection-line-dashed"
+                  style={{ ['--sample-color' as string]: relatedColor }}
+                />
+                <span>Color 3: related / associative links</span>
+              </div>
+            </div>
+
+            <p>
+              In the Word Web, arrows indicate hierarchical parent-to-child links. Dashed lines
+              mark related words that are connected but not part of that hierarchy.
+            </p>
+          </>
+        ) : null}
+
+        {activeSection === 'web' ? (
+          <>
+            <p>
+              The Word Web is the core feature of the app. It shows semantic connections between
+              words in a single interactive view.
+            </p>
+            <p>
+              The searched word is emphasized so it is easier to track, while connected nodes help
+              you compare parents, children, and other related terms.
+            </p>
+            <p>
+              Tap any node to open its detail page and read more information, add notes, or save it
+              into a group.
+            </p>
+          </>
+        ) : null}
+
+        {activeSection === 'groups' ? (
+          <>
+            <p>Groups are how you organize words you want to keep together.</p>
+            <p>Groups can be used for lesson planning, study notes, and custom word collections.</p>
+            <p>
+              You can create and delete groups, then open each group to review the saved words and
+              add notes.
+            </p>
+          </>
+        ) : null}
+
+        {activeSection === 'about' ? (
+          <>
+            <p>
+              Vocabulary Explorer was developed for learning and exploring semantic connections
+              between English and Cree words.
+            </p>
+            <p>
+              The concept is based on work associated with the Alberta Language Technology Lab at
+              the University of Alberta, with a focus on Indigenous language technology and language
+              learning.
+            </p>
+            <p>
+              This prototype is designed to make vocabulary relationships easier to search, browse,
+              and organize on mobile.
+            </p>
+          </>
+        ) : null}
+      </div>
 
       <FooterNav onOpenGroups={onOpenGroups} onOpenHome={onOpenHome} />
     </section>
