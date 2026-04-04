@@ -24,7 +24,7 @@
 }
 
 .app-shell {
-  min-height: 100svh;
+  height: 100svh;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -59,7 +59,8 @@ textarea,
 
 .phone-shell {
   position: relative;
-  width: min(100%, 430px);
+  width: min(calc((100svh - 40px) * (9 / 19.5)), 430px);
+  max-width: 430px;
   padding: 14px;
   border-radius: 42px;
   background: linear-gradient(145deg, #0b1622 0%, #203041 100%);
@@ -124,7 +125,8 @@ textarea,
 .phone-frame {
   position: relative;
   width: min(100%, 390px);
-  min-height: 100svh;
+  aspect-ratio: 9 / 19.5;
+  /* ← add this */
   background: linear-gradient(180deg, var(--bg-top) 0%, #203d63 42%, var(--bg-bottom) 100%);
   overflow: hidden;
   box-shadow: var(--shadow);
@@ -135,7 +137,7 @@ textarea,
 
 .page {
   position: relative;
-  min-height: 100svh;
+  height: 100%;
   padding: 48px 18px 28px;
   animation: page-rise 0.35s ease-out;
 }
@@ -442,7 +444,7 @@ textarea,
 
 .map-page {
   padding: 0 0 124px;
-  min-height: 100svh;
+  height: 100%;
 }
 
 .map-stage {
@@ -1516,6 +1518,7 @@ textarea,
 }
 
 @keyframes node-drift {
+
   0%,
   100% {
     transform: translateY(0);
