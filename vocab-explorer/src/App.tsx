@@ -336,6 +336,7 @@ function App() {
       case 'settings':
         return (
           <SettingsPage
+            isMinimal={previousScreen === 'login' || previousScreen === 'register'}
             semanticGaps={semanticGaps}
             fontSize={fontSize}
             contrastColor={contrastColor}
@@ -786,6 +787,7 @@ function WordDetailPage({
 }
 
 type SettingsPageProps = {
+  isMinimal: boolean
   semanticGaps: boolean
   fontSize: number
   contrastColor: string
@@ -803,6 +805,7 @@ type SettingsPageProps = {
 }
 
 function SettingsPage({
+  isMinimal,
   semanticGaps,
   fontSize,
   contrastColor,
@@ -819,7 +822,7 @@ function SettingsPage({
   onOpenHome,
 }: SettingsPageProps) {
   return (
-    <section className="page settings-page has-footer">
+    <section className={`page settings-page ${isMinimal ? '' : 'has-footer'}`.trim()}>
       <div className="page-header">
         <IconButton label="Back" onClick={onBack}>
           <BackIcon />
@@ -858,60 +861,62 @@ function SettingsPage({
         </div>
       ) : null}
 
-      <div className="settings-card colors-card">
-        <span>Connection Colors</span>
+      {isMinimal ? null : (
+        <div className="settings-card colors-card">
+          <span>Connection Colors</span>
 
-        <div className="swatch-row">
-          <div className="swatch-copy">
-            <strong>Color 1</strong>
-            <small>Synonyms / Antonyms</small>
+          <div className="swatch-row">
+            <div className="swatch-copy">
+              <strong>Color 1</strong>
+              <small>Synonyms / Antonyms</small>
+            </div>
+            <div className="swatch-list">
+              {semanticSwatches.map((swatch) => (
+                <SwatchButton
+                  key={`contrast-${swatch.label}`}
+                  swatch={swatch}
+                  selected={swatch.value === contrastColor}
+                  onSelect={onSelectContrastColor}
+                />
+              ))}
+            </div>
           </div>
-          <div className="swatch-list">
-            {semanticSwatches.map((swatch) => (
-              <SwatchButton
-                key={`contrast-${swatch.label}`}
-                swatch={swatch}
-                selected={swatch.value === contrastColor}
-                onSelect={onSelectContrastColor}
-              />
-            ))}
+
+          <div className="swatch-row">
+            <div className="swatch-copy">
+              <strong>Color 2</strong>
+              <small>Hypernyms / Hyponyms</small>
+            </div>
+            <div className="swatch-list">
+              {semanticSwatches.map((swatch) => (
+                <SwatchButton
+                  key={`hierarchy-${swatch.label}`}
+                  swatch={swatch}
+                  selected={swatch.value === hierarchyColor}
+                  onSelect={onSelectHierarchyColor}
+                />
+              ))}
+            </div>
+          </div>
+
+          <div className="swatch-row">
+            <div className="swatch-copy">
+              <strong>Color 3</strong>
+              <small>Related / Associative</small>
+            </div>
+            <div className="swatch-list">
+              {semanticSwatches.map((swatch) => (
+                <SwatchButton
+                  key={`related-${swatch.label}`}
+                  swatch={swatch}
+                  selected={swatch.value === relatedColor}
+                  onSelect={onSelectRelatedColor}
+                />
+              ))}
+            </div>
           </div>
         </div>
-
-        <div className="swatch-row">
-          <div className="swatch-copy">
-            <strong>Color 2</strong>
-            <small>Hypernyms / Hyponyms</small>
-          </div>
-          <div className="swatch-list">
-            {semanticSwatches.map((swatch) => (
-              <SwatchButton
-                key={`hierarchy-${swatch.label}`}
-                swatch={swatch}
-                selected={swatch.value === hierarchyColor}
-                onSelect={onSelectHierarchyColor}
-              />
-            ))}
-          </div>
-        </div>
-
-        <div className="swatch-row">
-          <div className="swatch-copy">
-            <strong>Color 3</strong>
-            <small>Related / Associative</small>
-          </div>
-          <div className="swatch-list">
-            {semanticSwatches.map((swatch) => (
-              <SwatchButton
-                key={`related-${swatch.label}`}
-                swatch={swatch}
-                selected={swatch.value === relatedColor}
-                onSelect={onSelectRelatedColor}
-              />
-            ))}
-          </div>
-        </div>
-      </div>
+      )}
 
       <div className="settings-card">
         <div className="setting-row">
@@ -931,38 +936,42 @@ function SettingsPage({
         </div>
       </div>
 
-      <div className="settings-card password-card">
-        <strong>Change Password</strong>
+      {isMinimal ? null : (
+        <div className="settings-card password-card">
+          <strong>Change Password</strong>
 
-        <div className="password-grid">
-          <label className="field-label compact-field">
-            <span>Old Password:</span>
-            <input type="password" defaultValue="********" />
-          </label>
+          <div className="password-grid">
+            <label className="field-label compact-field">
+              <span>Old Password:</span>
+              <input type="password" defaultValue="********" />
+            </label>
 
-          <label className="field-label compact-field">
-            <span>New Password:</span>
-            <input type="password" defaultValue="**********" />
-          </label>
+            <label className="field-label compact-field">
+              <span>New Password:</span>
+              <input type="password" defaultValue="**********" />
+            </label>
+          </div>
+
+          <div className="password-grid password-grid-reset">
+            <label className="field-label compact-field">
+              <span>Confirm Password:</span>
+              <input type="password" defaultValue="**********" />
+            </label>
+
+            <button type="button" className="danger-button">
+              Submit
+            </button>
+          </div>
         </div>
+      )}
 
-        <div className="password-grid password-grid-reset">
-          <label className="field-label compact-field">
-            <span>Confirm Password:</span>
-            <input type="password" defaultValue="**********" />
-          </label>
+      {isMinimal ? null : (
+        <button type="button" className="logout-button" onClick={onLogOut}>
+          Log Out
+        </button>
+      )}
 
-          <button type="button" className="danger-button">
-            Submit
-          </button>
-        </div>
-      </div>
-
-      <button type="button" className="logout-button" onClick={onLogOut}>
-        Log Out
-      </button>
-
-      <FooterNav onOpenGroups={onOpenGroups} onOpenHome={onOpenHome} />
+      {isMinimal ? null : <FooterNav onOpenGroups={onOpenGroups} onOpenHome={onOpenHome} />}
     </section>
   )
 }

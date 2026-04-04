@@ -127,24 +127,26 @@ function buildMapElements(showSemanticGaps: boolean, focusWordId: string): Eleme
   }))
 
   const edges: ElementDefinition[] = words.flatMap((word) =>
-    word.hypo.map((childId) => {
+    word.hypo.flatMap((childId) => {
       if (!visibleIds.has(childId)) {
-        return null
+        return []
       }
 
       const relationship = getEdgeRelationship(word.id, childId)
 
-      return {
-        data: {
-          id: `${word.id}-${childId}`,
-          source: word.id,
-          target: childId,
-          relationship,
-          relationshipLabel: getEdgeRelationshipLabel(relationship),
-          isFocusConnection: word.id === focusWordId || childId === focusWordId ? 'true' : 'false',
+      return [
+        {
+          data: {
+            id: `${word.id}-${childId}`,
+            source: word.id,
+            target: childId,
+            relationship,
+            relationshipLabel: getEdgeRelationshipLabel(relationship),
+            isFocusConnection: word.id === focusWordId || childId === focusWordId ? 'true' : 'false',
+          },
         },
-      }
-    }).filter((edge): edge is ElementDefinition => Boolean(edge)),
+      ]
+    }),
   )
 
   return [...nodes, ...edges]
