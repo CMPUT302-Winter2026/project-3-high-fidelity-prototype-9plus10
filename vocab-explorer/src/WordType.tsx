@@ -5,6 +5,7 @@ export interface Word {
   english: string
   cree: string
   hypo: string[]
+  related: string[]
   type: string
   info: string
 }
@@ -14,6 +15,7 @@ type RawWord = {
   english?: string | null
   cree?: string | null
   hypo?: string[] | null
+  related?: string[] | null
   type?: string | null
   info?: string | null
 }
@@ -29,6 +31,7 @@ function normalizeWord(rawWord: RawWord): Word {
     english,
     cree,
     hypo: Array.isArray(rawWord.hypo) ? rawWord.hypo : [],
+    related: Array.isArray(rawWord.related) ? rawWord.related : [],
     type: rawWord.type?.trim() || 'Vocabulary',
     info:
       rawWord.info?.trim() ||

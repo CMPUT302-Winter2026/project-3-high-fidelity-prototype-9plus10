@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useRef } from 'react'
-import type { Core, ElementDefinition, StylesheetJsonBlock } from 'cytoscape'
+import type {  Core, ElementDefinition, StylesheetJsonBlock} from 'cytoscape'
 import CytoscapeComponent from 'react-cytoscapejs'
+import cola from 'cytoscape-cola'
+import cytoscape from 'cytoscape'
 import Corpus, { getWordById, getWordLabel, type Word } from './WordType'
 
+cytoscape.use(cola)
 type WordmapProps = {
   focusWord: Word
   onSelectWord: (wordId: string) => void
@@ -100,18 +103,6 @@ function getFocusContext(wordId: string) {
   return { parentIds, childIds, contextIds }
 }
 
-function getEdgeRelationship(sourceId: string, targetId: string): 'hierarchy' | 'related' {
-  if (sourceId === '_dog' && targetId === '_bark') {
-    return 'related'
-  }
-
-  if (sourceId === '_animal' && (targetId === '_mamahtawisiwin')) {
-    return 'related'
-  }
-
-  return 'hierarchy'
-}
-
 function getEdgeRelationshipLabel(relationship: 'hierarchy' | 'related') {
   if (relationship === 'hierarchy') {
     return 'Hypernym / hyponym relationship'
@@ -142,33 +133,45 @@ function buildMapElements(showSemanticGaps: boolean, focusWordId: string): Eleme
     position: mapPositions[word.id] ?? { x: 168, y: 220 },
   }))
 
-  const edges: ElementDefinition[] = words.flatMap((word) =>
+    const hypoEdges: ElementDefinition[] = words.flatMap((word) =>
     word.hypo.flatMap((childId) => {
-      if (!visibleIds.has(childId)) {
-        return []
-      }
-
-      const relationship = getEdgeRelationship(word.id, childId)
+      if (!visibleIds.has(childId)) return []
       const childWord = getWordById(childId)
-
-      return [
-        {
-          data: {
-            id: `${word.id}-${childId}`,
-            source: word.id,
-            target: childId,
-            relationship,
-            relationshipLabel: getEdgeRelationshipLabel(relationship),
-            sourceLabel: getWordLabel(word),
-            targetLabel: childWord ? getWordLabel(childWord) : childId,
-            isFocusConnection: word.id === focusWordId || childId === focusWordId ? 'true' : 'false',
-          },
+      return [{
+        data: {
+          id: `${word.id}-${childId}`,
+          source: word.id,
+          target: childId,
+          relationship: 'hierarchy' as const,
+          relationshipLabel: getEdgeRelationshipLabel('hierarchy'),
+          sourceLabel: getWordLabel(word),
+          targetLabel: childWord ? getWordLabel(childWord) : childId,
+          isFocusConnection: word.id === focusWordId || childId === focusWordId ? 'true' : 'false',
         },
-      ]
+      }]
     }),
   )
 
-  return [...nodes, ...edges]
+    const relatedEdges: ElementDefinition[] = words.flatMap((word) =>
+    word.related.flatMap((relatedId) => {
+      if (!visibleIds.has(relatedId)) return []
+      const relatedWord = getWordById(relatedId)
+      return [{
+        data: {
+          id: `${word.id}-${relatedId}`,
+          source: word.id,
+          target: relatedId,
+          relationship: 'related' as const,
+          relationshipLabel: getEdgeRelationshipLabel('related'),
+          sourceLabel: getWordLabel(word),
+          targetLabel: relatedWord ? getWordLabel(relatedWord) : relatedId,
+          isFocusConnection: word.id === focusWordId || relatedId === focusWordId ? 'true' : 'false',
+        },
+      }]
+    }),
+  )
+
+  return [...nodes, ...hypoEdges, ...relatedEdges]
 }
 
 function buildPreviewElements(showSemanticGaps: boolean): ElementDefinition[] {
@@ -186,7 +189,7 @@ function buildPreviewElements(showSemanticGaps: boolean): ElementDefinition[] {
     position: previewPositions[index],
   }))
 
-  const edges: ElementDefinition[] = words.flatMap((word) =>
+    const hypoEdges: ElementDefinition[] = words.flatMap((word) =>
     word.hypo
       .filter((childId) => visibleIds.has(childId))
       .map((childId) => ({
@@ -194,12 +197,24 @@ function buildPreviewElements(showSemanticGaps: boolean): ElementDefinition[] {
           id: `preview-${word.id}-${childId}`,
           source: word.id,
           target: childId,
-          relationship: getEdgeRelationship(word.id, childId),
+          relationship: 'hierarchy' as const,
         },
       })),
   )
-
-  return [...nodes, ...edges]
+ 
+  const relatedEdges: ElementDefinition[] = words.flatMap((word) =>
+    word.related
+      .filter((relatedId) => visibleIds.has(relatedId))
+      .map((relatedId) => ({
+        data: {
+          id: `preview-${word.id}-${relatedId}`,
+          source: word.id,
+          target: relatedId,
+          relationship: 'related' as const,
+        },
+      })),
+  )
+  return [...nodes, ...hypoEdges, ...relatedEdges]
 }
 
 function syncMapViewport(cy: Core, focusWordId: string, zoomMode: 'default' | 'search' = 'default') {
@@ -299,7 +314,15 @@ export default function Wordmap({
       <CytoscapeComponent
         key={viewKey}
         elements={elements}
-        layout={{ name: 'preset', fit: false, padding: 18, animate: false }}
+        layout={{ name: 'cola',
+                  infinite: true,
+                  animate: true,
+                  refresh: 1,
+                  fit: false,
+                  padding: 18,
+                  edgeLength: 120,
+                  nodeSpacing: 40,
+                } as cytoscape.LayoutOptions}
         stylesheet={mapStylesheet}
         cy={(cy: Core) => {
           cyRef.current = cy
@@ -467,6 +490,9 @@ function createMapStylesheet({
       selector: 'edge',
       style: {
         width: 2.5,
+        // 'curve-style': 'unbundled-bezier',
+        'control-point-distances': [40],   // how far the curve bows out (px)
+        'control-point-weights': [0.5],    // where along the edge the peak sits (0–1)
         'line-color': 'rgba(214, 220, 227, 0.54)',
         'target-arrow-shape': 'triangle',
         'target-arrow-color': 'rgba(214, 220, 227, 0.54)',

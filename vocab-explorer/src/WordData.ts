@@ -3,6 +3,8 @@ export type FrontendWord = {
   english?: string
   cree?: string
   hypo?: string[]
+  // CHANGED: added related field for associative (non-hierarchical) connections
+  related?: string[]
   type?: string
   info?: string
 }
@@ -12,7 +14,9 @@ export const frontendWordList: FrontendWord[] = [
     id: '_animal',
     english: 'Animal',
     cree: 'pisiskiw',
-    hypo: ['_panda', '_dog', '_mamahtawisiwin', '_fish'],
+    // CHANGED: removed '_mamahtawisiwin' from hypo — it belongs only in related
+    hypo: ['_panda', '_dog', '_fish'],
+    related: ['_mamahtawisiwin'],
     type: 'Noun',
     info: 'A general category word that links several living-creature concepts together.',
   },
@@ -20,7 +24,9 @@ export const frontendWordList: FrontendWord[] = [
     id: '_dog',
     english: 'Dog',
     cree: 'atim',
-    hypo: ['_puppy', '_bark'],
+    // CHANGED: removed '_bark' from hypo — it belongs only in related
+    hypo: ['_puppy'],
+    related: ['_bark'],
     type: 'Noun',
     info: 'A common household animal and one of the main vocabulary examples in this prototype.',
   },
@@ -69,6 +75,7 @@ export const frontendWordList: FrontendWord[] = [
     english: "Plant",
     cree: "ohpikihcikan",
     hypo: [],
+    related: ["_animal"],
     type: "Noun",
     info: "Grows from the ground"
   },
@@ -77,6 +84,7 @@ export const frontendWordList: FrontendWord[] = [
     english: "Community",
     cree: "ihtâwin",
     hypo: ["_father", "_mother", "_sibling" ],
+    related: ["_animal", "_plant"],
     type: "Noun",
     info: "A group of people or a place of living"
   },
