@@ -464,6 +464,23 @@
   background: transparent;
 }
 
+.map-hover-callout {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: 104px;
+  z-index: 2;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: rgba(247, 247, 247, 0.95);
+  color: #11243c;
+  border: 2px solid rgba(17, 36, 60, 0.14);
+  box-shadow: 0 10px 24px rgba(8, 18, 34, 0.18);
+  font-size: 0.9rem;
+  line-height: 1.3;
+  pointer-events: none;
+}
+
 .detail-page {
   display: flex;
   flex-direction: column;
@@ -558,6 +575,14 @@
   margin-bottom: 6px;
 }
 
+.info-subtitle {
+  display: block;
+  margin-bottom: 10px;
+  color: #4e6582;
+  font-size: 0.92rem;
+  line-height: 1.35;
+}
+
 .info-panel p {
   margin: 0 0 8px;
   line-height: 1.4;
@@ -633,6 +658,55 @@
 
 .toggle-switch-on {
   background: #b8dfaa;
+}
+
+.semantic-gap-guide {
+  display: grid;
+  gap: 8px;
+}
+
+.semantic-gap-guide strong {
+  font-size: 1.02rem;
+}
+
+.semantic-gap-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.semantic-gap-item p {
+  margin: 0;
+  line-height: 1.35;
+}
+
+.semantic-gap-shape {
+  flex: 0 0 auto;
+  display: inline-block;
+}
+
+.semantic-gap-shape-box {
+  width: 48px;
+  height: 32px;
+  border-radius: 9px;
+  border: 3px solid #9272c9;
+  background: rgba(203, 184, 235, 0.95);
+}
+
+.semantic-gap-shape-diamond {
+  width: 32px;
+  height: 32px;
+  transform: rotate(45deg);
+  border: 3px solid #b96596;
+  background: rgba(222, 161, 196, 0.95);
+}
+
+.semantic-gap-shape-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: 3px solid #4e90d4;
+  background: rgba(167, 200, 236, 0.95);
 }
 
 .font-slider {

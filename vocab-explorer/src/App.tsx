@@ -1,9 +1,10 @@
-import { useMemo, useState, type CSSProperties, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import './App.css'
 import Wordmap from './Wordmap'
 import Corpus, {
   findWordByQuery,
   getChildWords,
+  getNodeShapeMeaning,
   getParentWords,
   getSiblingWords,
   getWordById,
@@ -88,7 +89,7 @@ function App() {
       },
     )
 
-    return [...deduped.values()].slice(0, 3)
+  return [...deduped.values()].slice(0, 3)
   }, [activeWord.id])
 
   const groupWords = useMemo(
@@ -316,6 +317,7 @@ function App() {
         return (
           <WordDetailPage
             word={activeWord}
+            semanticGaps={semanticGaps}
             relatedWords={relatedWords}
             groups={groups}
             selectedGroupId={selectedGroupId}
@@ -599,12 +601,46 @@ function MapPage({
   onOpenGroups,
   onOpenHome,
 }: MapPageProps) {
+  const [relationshipHoverMessage, setRelationshipHoverMessage] = useState<string | null>(null)
+  const relationshipHoverTimeoutRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (relationshipHoverTimeoutRef.current !== null) {
+        window.clearTimeout(relationshipHoverTimeoutRef.current)
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    setRelationshipHoverMessage(null)
+
+    if (relationshipHoverTimeoutRef.current !== null) {
+      window.clearTimeout(relationshipHoverTimeoutRef.current)
+      relationshipHoverTimeoutRef.current = null
+    }
+  }, [word.id])
+
+  function showRelationshipHover(label: string) {
+    setRelationshipHoverMessage(label)
+
+    if (relationshipHoverTimeoutRef.current !== null) {
+      window.clearTimeout(relationshipHoverTimeoutRef.current)
+    }
+
+    relationshipHoverTimeoutRef.current = window.setTimeout(() => {
+      setRelationshipHoverMessage(null)
+      relationshipHoverTimeoutRef.current = null
+    }, 1600)
+  }
+
   return (
     <section className="page map-page has-footer">
       <div className="map-stage">
         <Wordmap
           focusWord={word}
           onSelectWord={onOpenWord}
+          onHoverConnection={showRelationshipHover}
           showSemanticGaps={semanticGaps}
           hierarchyColor={hierarchyColor}
           relatedColor={relatedColor}
@@ -638,6 +674,12 @@ function MapPage({
             </CircleIconButton>
           </div>
         </div>
+
+        {relationshipHoverMessage ? (
+          <div className="map-hover-callout" aria-live="polite">
+            {relationshipHoverMessage}
+          </div>
+        ) : null}
       </div>
 
       <FooterNav onOpenGroups={onOpenGroups} onOpenHome={onOpenHome} />
@@ -647,6 +689,7 @@ function MapPage({
 
 type WordDetailPageProps = {
   word: Word
+  semanticGaps: boolean
   relatedWords: Word[]
   groups: WordGroup[]
   selectedGroupId: string
@@ -662,6 +705,7 @@ type WordDetailPageProps = {
 
 function WordDetailPage({
   word,
+  semanticGaps,
   relatedWords,
   groups,
   selectedGroupId,
@@ -697,6 +741,7 @@ function WordDetailPage({
 
       <div className="info-panel">
         <strong>{word.type}</strong>
+        {semanticGaps ? <span className="info-subtitle">{getNodeShapeMeaning(word)}</span> : null}
         <p>{word.info}</p>
 
         {relatedWords.length > 0 ? (
@@ -794,6 +839,24 @@ function SettingsPage({
           <span>{semanticGaps ? 'ON' : 'OFF'}</span>
         </button>
       </div>
+
+      {semanticGaps ? (
+        <div className="settings-card semantic-gap-guide">
+          <strong>Semantic Gaps Guide</strong>
+          <div className="semantic-gap-item">
+            <span className="semantic-gap-shape semantic-gap-shape-box" aria-hidden="true" />
+            <p>Rounded box: the word exists in both English and Cree.</p>
+          </div>
+          <div className="semantic-gap-item">
+            <span className="semantic-gap-shape semantic-gap-shape-diamond" aria-hidden="true" />
+            <p>Diamond: the word exists only in Cree.</p>
+          </div>
+          <div className="semantic-gap-item">
+            <span className="semantic-gap-shape semantic-gap-shape-circle" aria-hidden="true" />
+            <p>Circle: the word exists only in English.</p>
+          </div>
+        </div>
+      ) : null}
 
       <div className="settings-card colors-card">
         <span>Connection Colors</span>

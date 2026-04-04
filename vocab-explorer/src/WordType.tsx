@@ -54,6 +54,32 @@ export function getWordLabel(word: Word, preferredLanguage: 'english' | 'cree' =
   return word.cree || word.english || word.id.replace(/^_/, '')
 }
 
+export function getNodeShapeLabel(word: Word): 'Rounded box' | 'Diamond' | 'Circle' {
+  if (word.english && word.cree) {
+    return 'Rounded box'
+  }
+
+  if (word.cree && !word.english) {
+    return 'Diamond'
+  }
+
+  return 'Circle'
+}
+
+export function getNodeShapeMeaning(word: Word): string {
+  const shape = getNodeShapeLabel(word)
+
+  if (shape === 'Rounded box') {
+    return 'Rounded box: this word exists in both English and Cree.'
+  }
+
+  if (shape === 'Diamond') {
+    return 'Diamond: this word exists only in Cree.'
+  }
+
+  return 'Circle: this word exists only in English.'
+}
+
 export function findWordByQuery(query: string): Word | undefined {
   const searchTerm = toSearchable(query)
 

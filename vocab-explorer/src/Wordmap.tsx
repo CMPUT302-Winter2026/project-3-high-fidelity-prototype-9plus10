@@ -6,6 +6,7 @@ import Corpus, { getWordLabel, type Word } from './WordType'
 type WordmapProps = {
   focusWord: Word
   onSelectWord: (wordId: string) => void
+  onHoverConnection: (label: string) => void
   showSemanticGaps: boolean
   hierarchyColor: string
   relatedColor: string
@@ -95,6 +96,14 @@ function getEdgeRelationship(sourceId: string, targetId: string): 'hierarchy' | 
   return 'hierarchy'
 }
 
+function getEdgeRelationshipLabel(relationship: 'hierarchy' | 'related') {
+  if (relationship === 'hierarchy') {
+    return 'Hypernym / hyponym relationship'
+  }
+
+  return 'Related / associative relationship'
+}
+
 function buildMapElements(showSemanticGaps: boolean, focusWordId: string): ElementDefinition[] {
   const words = Corpus.Words
   const { contextIds } = getFocusContext(focusWordId)
@@ -113,15 +122,20 @@ function buildMapElements(showSemanticGaps: boolean, focusWordId: string): Eleme
   }))
 
   const edges: ElementDefinition[] = words.flatMap((word) =>
-    word.hypo.map((childId) => ({
-      data: {
-        id: `${word.id}-${childId}`,
-        source: word.id,
-        target: childId,
-        relationship: getEdgeRelationship(word.id, childId),
-        isFocusConnection: word.id === focusWordId || childId === focusWordId ? 'true' : 'false',
-      },
-    })),
+    word.hypo.map((childId) => {
+      const relationship = getEdgeRelationship(word.id, childId)
+
+      return {
+        data: {
+          id: `${word.id}-${childId}`,
+          source: word.id,
+          target: childId,
+          relationship,
+          relationshipLabel: getEdgeRelationshipLabel(relationship),
+          isFocusConnection: word.id === focusWordId || childId === focusWordId ? 'true' : 'false',
+        },
+      }
+    }),
   )
 
   return [...nodes, ...edges]
@@ -175,6 +189,7 @@ function syncMapViewport(cy: Core, focusWordId: string) {
 export default function Wordmap({
   focusWord,
   onSelectWord,
+  onHoverConnection,
   showSemanticGaps,
   hierarchyColor,
   relatedColor,
@@ -222,6 +237,14 @@ export default function Wordmap({
 
             if (selectedId) {
               onSelectWord(selectedId)
+            }
+          })
+
+          cy.on('mouseover', 'edge', (event) => {
+            const relationshipLabel = event.target.data('relationshipLabel') as string | undefined
+
+            if (relationshipLabel) {
+              onHoverConnection(relationshipLabel)
             }
           })
 
