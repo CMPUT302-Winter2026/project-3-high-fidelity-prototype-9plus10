@@ -557,9 +557,9 @@ function SearchPage({
               onChange={(event) => onSearchValueChange(event.target.value)}
               placeholder="Search for an English or Cree word"
             />
-            <button type="submit" className="search-submit search-submit-inline" aria-label="Search">
+            <span className="search-submit search-submit-inline search-submit-decorative" aria-hidden="true">
               <SearchIcon />
-            </button>
+            </span>
           </form>
 
           <div className="search-preview-panel">

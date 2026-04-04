@@ -361,7 +361,7 @@ textarea,
   height: 100%;
   min-height: 100%;
   display: flex;
-  align-items: stretch;
+  align-items: center;
   justify-content: center;
 }
 
@@ -375,6 +375,7 @@ textarea,
   overflow: hidden;
   box-shadow: none;
   opacity: 0.88;
+  pointer-events: none;
 }
 
 .fancy-webmap-art {
@@ -382,6 +383,7 @@ textarea,
   height: 100%;
   display: block;
   transform: none;
+  pointer-events: none;
 }
 
 .search-form {
@@ -432,6 +434,10 @@ textarea,
   border-width: 0;
   background: transparent;
   color: #7a4eb1;
+}
+
+.search-submit-decorative {
+  pointer-events: none;
 }
 
 .map-page {
