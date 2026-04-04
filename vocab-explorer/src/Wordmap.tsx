@@ -104,8 +104,13 @@ function getEdgeRelationshipLabel(relationship: 'hierarchy' | 'related') {
   return 'Related / associative relationship'
 }
 
+function isSemanticGapWord(word: Word) {
+  return !word.english || !word.cree
+}
+
 function buildMapElements(showSemanticGaps: boolean, focusWordId: string): ElementDefinition[] {
-  const words = Corpus.Words
+  const words = showSemanticGaps ? Corpus.Words : Corpus.Words.filter((word) => !isSemanticGapWord(word))
+  const visibleIds = new Set(words.map((word) => word.id))
   const { contextIds } = getFocusContext(focusWordId)
 
   const nodes: ElementDefinition[] = words.map((word) => ({
@@ -115,14 +120,18 @@ function buildMapElements(showSemanticGaps: boolean, focusWordId: string): Eleme
       label: buildNodeLabel(word),
       variant: getNodeVariant(word.id),
       isFocus: word.id === focusWordId ? 'true' : 'false',
-      isContext: contextIds.has(word.id) ? 'true' : 'false',
-      hasGap: showSemanticGaps && (!word.english || !word.cree) ? 'true' : 'false',
+      isContext: contextIds.has(word.id) && visibleIds.has(word.id) ? 'true' : 'false',
+      hasGap: showSemanticGaps && isSemanticGapWord(word) ? 'true' : 'false',
     },
     position: mapPositions[word.id] ?? { x: 168, y: 220 },
   }))
 
   const edges: ElementDefinition[] = words.flatMap((word) =>
     word.hypo.map((childId) => {
+      if (!visibleIds.has(childId)) {
+        return null
+      }
+
       const relationship = getEdgeRelationship(word.id, childId)
 
       return {
@@ -135,14 +144,15 @@ function buildMapElements(showSemanticGaps: boolean, focusWordId: string): Eleme
           isFocusConnection: word.id === focusWordId || childId === focusWordId ? 'true' : 'false',
         },
       }
-    }),
+    }).filter((edge): edge is ElementDefinition => Boolean(edge)),
   )
 
   return [...nodes, ...edges]
 }
 
 function buildPreviewElements(showSemanticGaps: boolean): ElementDefinition[] {
-  const words = Corpus.Words.slice(0, previewPositions.length)
+  const sourceWords = showSemanticGaps ? Corpus.Words : Corpus.Words.filter((word) => !isSemanticGapWord(word))
+  const words = sourceWords.slice(0, previewPositions.length)
   const visibleIds = new Set(words.map((word) => word.id))
 
   const nodes: ElementDefinition[] = words.map((word, index) => ({
@@ -150,7 +160,7 @@ function buildPreviewElements(showSemanticGaps: boolean): ElementDefinition[] {
       id: word.id,
       wordId: word.id,
       label: '',
-      hasGap: showSemanticGaps && (!word.english || !word.cree) ? 'true' : 'false',
+      hasGap: showSemanticGaps && isSemanticGapWord(word) ? 'true' : 'false',
     },
     position: previewPositions[index],
   }))
