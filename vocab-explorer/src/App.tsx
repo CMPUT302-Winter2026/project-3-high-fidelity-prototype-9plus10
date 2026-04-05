@@ -11,6 +11,13 @@ import Corpus, {
   getWordLabel,
   type Word,
 } from './WordType'
+import TutorialModal from "./components/TutorialModal";
+import { baseTutorialSteps } from "./data/baseTutorialSteps";
+import { groupsIntroTutorialSteps } from "./data/groupsIntroTutorialSteps";
+import { advancedTutorialSteps } from "./data/advancedTutorialSteps";
+import { createGroupTutorialSteps } from "./data/createGroupTutorialSteps";
+import { manageGroupTutorialSteps } from "./data/manageGroupTutorialSteps";
+import { wordWebTutorialSteps } from "./data/wordWebTutorialSteps";
 
 type Screen = 'login' | 'register' | 'search' | 'map' | 'detail' | 'settings' | 'groups' | 'help'
 type HelpSection = 'how' | 'legend' | 'web' | 'groups' | 'about'
@@ -77,6 +84,13 @@ function App() {
   const defaultWord = findWordByQuery('dog') ?? fallbackWord
 
   const [screen, setScreen] = useState<Screen>('login')
+  const [showTutorial, setShowTutorial] = useState(false);
+
+  const [showAdvancedTutorial, setShowAdvancedTutorial] = useState(false);
+  const [showGroupsIntroTutorial, setShowGroupsIntroTutorial] = useState(false);
+  const [showCreateGroupTutorial, setShowCreateGroupTutorial] = useState(false);
+  const [showManageGroupTutorial, setShowManageGroupTutorial] = useState(false);
+  const [showWordWebTutorial, setShowWordWebTutorial] = useState(false);
   const [previousScreen, setPreviousScreen] = useState<Screen>('search')
   const [helpReturnScreen, setHelpReturnScreen] = useState<Screen>('search')
   const [helpSection, setHelpSection] = useState<HelpSection>('how')
@@ -101,6 +115,12 @@ function App() {
     token: 0,
     wordId: defaultWord.id,
   })
+  const hasShownBaseTutorialRef = useRef(false)
+  const hasShownWordWebTutorialRef = useRef(false)
+  const hasShownGroupsIntroTutorialRef = useRef(false)
+  const hasShownCreateGroupTutorialRef = useRef(false)
+  const hasShownManageGroupTutorialRef = useRef(false)
+  const hasShownAdvancedTutorialRef = useRef(false)
 
   const activeWord = getWordById(activeWordId) ?? defaultWord
   const selectedGroup = groups.find((group) => group.id === selectedGroupId) ?? groups[0]
@@ -159,6 +179,69 @@ function App() {
     [contrastColor, fontSize, hierarchyColor, relatedColor],
   )
 
+  useEffect(() => {
+    if (screen === "search" && !hasShownBaseTutorialRef.current) {
+      hasShownBaseTutorialRef.current = true
+      setShowTutorial(true);
+    }
+  }, [screen]);
+
+  useEffect(() => {
+    if (screen === "map" && !hasShownWordWebTutorialRef.current) {
+      hasShownWordWebTutorialRef.current = true
+      setShowWordWebTutorial(true);
+    }
+  }, [screen]);
+
+  const handleFinishTutorial = () => {
+    setShowTutorial(false)
+  }
+
+  const handleFinishWordWebTutorial = () => {
+    setShowWordWebTutorial(false)
+  }
+
+  const handleCloseWordWebTutorial = () => {
+    setShowWordWebTutorial(false)
+  }
+
+  const handleFinishGroupsIntroTutorial = () => {
+    setShowGroupsIntroTutorial(false)
+  }
+
+  const handleCloseGroupsIntroTutorial = () => {
+    setShowGroupsIntroTutorial(false)
+  }
+
+  const handleFinishCreateGroupTutorial = () => {
+    setShowCreateGroupTutorial(false)
+  }
+
+  const handleCloseCreateGroupTutorial = () => {
+    setShowCreateGroupTutorial(false)
+  }
+
+  const handleFinishManageGroupTutorial = () => {
+    setShowManageGroupTutorial(false)
+  }
+
+  const handleCloseManageGroupTutorial = () => {
+    setShowManageGroupTutorial(false)
+  }
+
+
+  const handleFinishAdvancedTutorial = () => {
+    setShowAdvancedTutorial(false)
+  }
+
+  const handleCloseAdvancedTutorial = () => {
+    setShowAdvancedTutorial(false)
+  }
+
+  const handleCloseTutorial = () => {
+    setShowTutorial(false)
+  }
+
   function openSettings(from: Screen) {
     setPreviousScreen(from)
     setScreen('settings')
@@ -168,6 +251,16 @@ function App() {
     setHelpReturnScreen(from)
     setHelpSection(nextSection)
     setScreen('help')
+  }
+
+  function handleToggleSemanticGaps() {
+    const nextValue = !semanticGaps
+    setSemanticGaps(nextValue)
+
+    if (nextValue && !hasShownAdvancedTutorialRef.current) {
+      hasShownAdvancedTutorialRef.current = true
+      setShowAdvancedTutorial(true)
+    }
   }
 
   function openSearchResult(query: string) {
@@ -192,6 +285,11 @@ function App() {
     setShowCreateGroupModal(false)
     setShowAddWordsModal(false)
     setGroupWordSearch('')
+
+    if (!hasShownGroupsIntroTutorialRef.current) {
+      hasShownGroupsIntroTutorialRef.current = true
+      setShowGroupsIntroTutorial(true);
+    }
   }
 
   function openGroupDetail(groupId: string) {
@@ -201,6 +299,11 @@ function App() {
     setShowCreateGroupModal(false)
     setShowAddWordsModal(false)
     setGroupWordSearch('')
+
+    if (!hasShownManageGroupTutorialRef.current) {
+      hasShownManageGroupTutorialRef.current = true
+      setShowManageGroupTutorial(true);
+    }
   }
 
   function openWordDetail(wordId: string) {
@@ -316,6 +419,63 @@ function App() {
     })
   }
 
+  function handleOpenCreateGroup() {
+    setShowCreateGroupModal(true);
+
+    if (!hasShownCreateGroupTutorialRef.current) {
+      hasShownCreateGroupTutorialRef.current = true
+      setShowCreateGroupTutorial(true);
+    }
+  }
+
+  function replayBaseTutorial() {
+    setScreen('search')
+    setShowTutorial(true)
+  }
+
+  function replayWordWebTutorial() {
+    setScreen('map')
+    setShowWordWebTutorial(true)
+  }
+
+  function replayGroupsIntroTutorial() {
+    setScreen('groups')
+    setGroupsView('overview')
+    setShowCreateGroupModal(false)
+    setShowAddWordsModal(false)
+    setGroupWordSearch('')
+    setShowGroupsIntroTutorial(true)
+  }
+
+  function replayCreateGroupTutorial() {
+    setScreen('groups')
+    setGroupsView('overview')
+    setShowAddWordsModal(false)
+    setGroupWordSearch('')
+    setShowCreateGroupModal(true)
+    setShowCreateGroupTutorial(true)
+  }
+
+  function replayManageGroupTutorial() {
+    const targetGroupId = selectedGroup?.id ?? groups[0]?.id
+
+    if (targetGroupId) {
+      setSelectedGroupId(targetGroupId)
+    }
+
+    setScreen('groups')
+    setGroupsView('detail')
+    setShowCreateGroupModal(false)
+    setShowAddWordsModal(false)
+    setGroupWordSearch('')
+    setShowManageGroupTutorial(true)
+  }
+
+  function replayAdvancedTutorial() {
+    setScreen('settings')
+    setShowAdvancedTutorial(true)
+  }
+
   function closeDeleteDialog() {
     setPendingDeleteAction(null)
   }
@@ -335,7 +495,7 @@ function App() {
 
     setPendingDeleteAction(null)
   }
-
+  
   function renderPage() {
     switch (screen) {
       case 'login':
@@ -416,7 +576,8 @@ function App() {
             hierarchyColor={hierarchyColor}
             relatedColor={relatedColor}
             onBack={() => setScreen(previousScreen)}
-            onToggleSemanticGaps={() => setSemanticGaps((current) => !current)}
+            // onToggleSemanticGaps={() => setSemanticGaps((current) => !current)}
+            onToggleSemanticGaps={handleToggleSemanticGaps}
             onFontSizeChange={setFontSize}
             onSelectContrastColor={setContrastColor}
             onSelectHierarchyColor={setHierarchyColor}
@@ -437,6 +598,12 @@ function App() {
             relatedColor={relatedColor}
             onBack={() => setScreen(helpReturnScreen)}
             onSelectSection={setHelpSection}
+            onReplayBaseTutorial={replayBaseTutorial}
+            onReplayWordWebTutorial={replayWordWebTutorial}
+            onReplayGroupsIntroTutorial={replayGroupsIntroTutorial}
+            onReplayCreateGroupTutorial={replayCreateGroupTutorial}
+            onReplayManageGroupTutorial={replayManageGroupTutorial}
+            onReplayAdvancedTutorial={replayAdvancedTutorial}
             onOpenGroups={openGroupsOverview}
             onOpenHome={openSearchScreen}
           />
@@ -462,7 +629,7 @@ function App() {
             }}
             onGroupSearchChange={setGroupSearchValue}
             onNewGroupNameChange={setNewGroupName}
-            onOpenCreateGroup={() => setShowCreateGroupModal(true)}
+            onOpenCreateGroup={handleOpenCreateGroup}
             onCloseCreateGroup={() => {
               setShowCreateGroupModal(false)
               setNewGroupName('')
@@ -505,6 +672,47 @@ function App() {
         </div>
 
         <div className="phone-frame">
+          <TutorialModal
+            isOpen={showTutorial}
+            steps={baseTutorialSteps}
+            onClose={handleCloseTutorial}
+            onFinish={handleFinishTutorial}
+          />
+
+          <TutorialModal
+            isOpen={showWordWebTutorial}
+            steps={wordWebTutorialSteps}
+            onClose={handleCloseWordWebTutorial}
+            onFinish={handleFinishWordWebTutorial}
+          />
+
+          <TutorialModal
+            isOpen={showAdvancedTutorial}
+            steps={advancedTutorialSteps}
+            onClose={handleCloseAdvancedTutorial}
+            onFinish={handleFinishAdvancedTutorial}
+          />
+
+          <TutorialModal
+            isOpen={showGroupsIntroTutorial}
+            steps={groupsIntroTutorialSteps}
+            onClose={handleCloseGroupsIntroTutorial}
+            onFinish={handleFinishGroupsIntroTutorial}
+          />
+
+          <TutorialModal
+            isOpen={showCreateGroupTutorial}
+            steps={createGroupTutorialSteps}
+            onClose={handleCloseCreateGroupTutorial}
+            onFinish={handleFinishCreateGroupTutorial}
+          />
+
+          <TutorialModal
+            isOpen={showManageGroupTutorial}
+            steps={manageGroupTutorialSteps}
+            onClose={handleCloseManageGroupTutorial}
+            onFinish={handleFinishManageGroupTutorial}
+          />
           {renderPage()}
           {pendingDeleteAction ? (
             <ConfirmationDialog
@@ -522,6 +730,8 @@ function App() {
       </div>
     </div>
   )
+  
+
 }
 
 type AuthPageProps = {
@@ -619,16 +829,17 @@ function SearchPage({
   return (
     <section className="page search-page has-footer">
       <div className="top-actions">
-        <CircleIconButton label="Help" onClick={onOpenHelp}>
+        <CircleIconButton id="help-button" label="Help" onClick={onOpenHelp}>
           <HelpIcon />
         </CircleIconButton>
-        <CircleIconButton label="Settings" onClick={onOpenSettings}>
+        <CircleIconButton id="settings-button" label="Settings" onClick={onOpenSettings}>
           <SettingsIcon />
         </CircleIconButton>
       </div>
 
       <div className="search-stage">
         <div className="search-preview-stack">
+          <div id="word-web-preview-target" className="search-preview-highlight-target" aria-hidden="true" />
           <form
             className="search-form search-form-centered"
             onSubmit={(event) => {
@@ -636,7 +847,7 @@ function SearchPage({
               onSearch()
             }}
           >
-            <input
+            <input id="search-bar"
               type="text"
               value={searchValue}
               onChange={(event) => onSearchValueChange(event.target.value)}
@@ -647,7 +858,7 @@ function SearchPage({
             </span>
           </form>
 
-          <div className="search-preview-panel">
+          <div id="word-web-preview" className="search-preview-panel">
             <FancyWebmapArtwork />
           </div>
         </div>
@@ -1136,6 +1347,12 @@ type HelpPageProps = {
   relatedColor: string
   onBack: () => void
   onSelectSection: (section: HelpSection) => void
+  onReplayBaseTutorial: () => void
+  onReplayWordWebTutorial: () => void
+  onReplayGroupsIntroTutorial: () => void
+  onReplayCreateGroupTutorial: () => void
+  onReplayManageGroupTutorial: () => void
+  onReplayAdvancedTutorial: () => void
   onOpenGroups: () => void
   onOpenHome: () => void
 }
@@ -1147,6 +1364,12 @@ function HelpPage({
   relatedColor,
   onBack,
   onSelectSection,
+  onReplayBaseTutorial,
+  onReplayWordWebTutorial,
+  onReplayGroupsIntroTutorial,
+  onReplayCreateGroupTutorial,
+  onReplayManageGroupTutorial,
+  onReplayAdvancedTutorial,
   onOpenGroups,
   onOpenHome,
 }: HelpPageProps) {
@@ -1198,6 +1421,27 @@ function HelpPage({
             <p>
               Use Groups to organize saved words for lesson plans, revision, or classroom activities.
             </p>
+
+            <div className="help-tutorial-actions">
+              <button type="button" className="primary-button" onClick={onReplayBaseTutorial}>
+                Replay Home Tutorial
+              </button>
+              <button type="button" className="primary-button" onClick={onReplayWordWebTutorial}>
+                Replay Word Web Tutorial
+              </button>
+              <button type="button" className="primary-button" onClick={onReplayGroupsIntroTutorial}>
+                Replay Groups Intro
+              </button>
+              <button type="button" className="primary-button" onClick={onReplayCreateGroupTutorial}>
+                Replay Create Group
+              </button>
+              <button type="button" className="primary-button" onClick={onReplayManageGroupTutorial}>
+                Replay Manage Group
+              </button>
+              <button type="button" className="primary-button" onClick={onReplayAdvancedTutorial}>
+                Replay Advanced Mode
+              </button>
+            </div>
           </>
         ) : null}
 
@@ -1520,6 +1764,7 @@ function FooterNav({ active, onOpenGroups, onOpenHome }: FooterNavProps) {
   return (
     <nav className="footer-nav" aria-label="Primary">
       <button
+        id="groups-footer-button"
         type="button"
         className={`footer-tab ${active === 'groups' ? 'footer-tab-active' : ''}`}
         onClick={onOpenGroups}
@@ -1655,14 +1900,14 @@ function SwatchButton({ swatch, selected, onSelect }: SwatchButtonProps) {
 }
 
 type CircleIconButtonProps = {
+  id?: string
   label: string
   onClick: () => void
   children: ReactNode
 }
-
-function CircleIconButton({ label, onClick, children }: CircleIconButtonProps) {
+function CircleIconButton({ id, label, onClick, children }: CircleIconButtonProps) {
   return (
-    <button type="button" className="circle-icon-button" aria-label={label} onClick={onClick}>
+    <button type="button" id={id} className="circle-icon-button" aria-label={label} onClick={onClick}>
       {children}
     </button>
   )

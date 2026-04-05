@@ -367,6 +367,16 @@ textarea,
   justify-content: center;
 }
 
+.search-preview-highlight-target {
+  position: absolute;
+  top: 84px;
+  left: 22px;
+  right: 22px;
+  bottom: 122px;
+  border-radius: 26px;
+  pointer-events: none;
+}
+
 .search-preview-panel {
   position: absolute;
   inset: 0;
@@ -1058,6 +1068,13 @@ textarea,
 
 .help-sheet p:last-child {
   margin-bottom: 0;
+}
+
+.help-tutorial-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 6px;
 }
 
 .help-legend-shapes {
