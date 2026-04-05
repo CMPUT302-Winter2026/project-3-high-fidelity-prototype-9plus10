@@ -72,10 +72,15 @@ const matchScores: Record<string, number> = {
   '_mamÃ¢htÃ¢wisiwin': 68,
 }
 
+
+
+
+
+
 function App() {
   const fallbackWord = Corpus.Words[0]
   const defaultWord = findWordByQuery('dog') ?? fallbackWord
-
+  const [loggedInEmail, setLoggedInEmail] = useState<string | null>(null) // ADDED: tracks who is logged in  const [screen, setScreen] = useState<Screen>('login')
   const [screen, setScreen] = useState<Screen>('login')
   const [previousScreen, setPreviousScreen] = useState<Screen>('search')
   const [helpReturnScreen, setHelpReturnScreen] = useState<Screen>('search')
@@ -343,7 +348,7 @@ function App() {
           <AuthPage
             mode="login"
             onOpenSettings={() => openSettings('login')}
-            onPrimaryAction={() => setScreen('search')}
+            onPrimaryAction={(email: string) => { setLoggedInEmail(email); setScreen('search') }} // CHANGED: was () => setScreen('search'), now also saves email
             onSwitchMode={() => setScreen('register')}
           />
         )
@@ -352,7 +357,7 @@ function App() {
           <AuthPage
             mode="register"
             onOpenSettings={() => openSettings('register')}
-            onPrimaryAction={() => setScreen('search')}
+            onPrimaryAction={(email: string) => { setLoggedInEmail(email); setScreen('search') }} // CHANGED: same as above
             onSwitchMode={() => setScreen('login')}
           />
         )
@@ -423,6 +428,7 @@ function App() {
             onSelectRelatedColor={setRelatedColor}
             onLogOut={() => {
               setScreen('login')
+              setLoggedInEmail(null) // ADDED: clears the logged-in user on logout
             }}
             onOpenGroups={openGroupsOverview}
             onOpenHome={openSearchScreen}
@@ -524,16 +530,91 @@ function App() {
   )
 }
 
+
+
+
+
+
 type AuthPageProps = {
   mode: 'login' | 'register'
-  onPrimaryAction: () => void
+  onPrimaryAction: (email: string) => void // CHANGED: was () => void, now passes email back to App
   onSwitchMode: () => void
   onOpenSettings: () => void
 }
 
+
+// ---- ADDED: auth helpers — plain-text storage in localStorage (prototype only) ----
+type StoredUser = { email: string; password: string }
+ 
+function getUsers(): Record<string, StoredUser> {
+  try {
+    return JSON.parse(localStorage.getItem('app_users') ?? '{}')
+  } catch {
+    return {}
+  }
+}
+ 
+function saveUser(email: string, password: string): 'ok' | 'exists' {
+  const users = getUsers()
+  const key = email.toLowerCase()
+  if (users[key]) return 'exists'
+  users[key] = { email: key, password }
+  localStorage.setItem('app_users', JSON.stringify(users))
+  return 'ok'
+}
+ 
+function checkUser(email: string, password: string): 'ok' | 'not-found' | 'wrong-password' {
+  const users = getUsers()
+  const stored = users[email.toLowerCase()]
+  if (!stored) return 'not-found'
+  if (stored.password !== password) return 'wrong-password'
+  return 'ok'
+}
+// ---- END ADDED ----
+
 function AuthPage({ mode, onPrimaryAction, onSwitchMode, onOpenSettings }: AuthPageProps) {
   const isRegister = mode === 'register'
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [error, setError] = useState('')
 
+
+    // ADDED: replaces the bare event.preventDefault() + onPrimaryAction() that was here before
+  function handleSubmit(event: React.SubmitEvent) {
+    event.preventDefault()
+    setError('')
+ 
+    if (!email || !password) {
+      setError('Please fill in all fields.')
+      return
+    }
+ 
+    if (isRegister) {
+      if (password !== confirmPassword) {
+        setError('Passwords do not match.')
+        return
+      }
+      const result = saveUser(email, password)
+      if (result === 'exists') {
+        setError('An account with that email already exists.')
+        return
+      }
+    } else {
+      const result = checkUser(email, password)
+      if (result === 'not-found') {
+        setError('No account found with that email.')
+        return
+      }
+      if (result === 'wrong-password') {
+        setError('Incorrect password.')
+        return
+      }
+    }
+ 
+    onPrimaryAction(email)
+  }
+  
   return (
     <section className="page auth-page">
       <div className="top-actions top-actions-single">
@@ -556,31 +637,42 @@ function AuthPage({ mode, onPrimaryAction, onSwitchMode, onOpenSettings }: AuthP
 
       <form
         className="auth-form"
-        onSubmit={(event) => {
-          event.preventDefault()
-          onPrimaryAction()
-        }}
+        onSubmit={handleSubmit}
       >
         <label className="field-label">
           <span>Email:</span>
-          <input type="email" defaultValue="your-email@app.com" />
+          <input type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="your-email@example.com"
+          />
         </label>
 
         <label className="field-label">
           <span>Password:</span>
-          <input type="password" defaultValue="************" />
+          <input type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="••••••••"
+          />
         </label>
 
         {isRegister ? (
           <label className="field-label">
             <span>Confirm Password:</span>
-            <input type="password" defaultValue="************" />
+            <input type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="••••••••"
+            />
           </label>
         ) : (
           <button type="button" className="text-link align-left">
             Forgot your password?
           </button>
         )}
+
+        {error && <p className="auth-error" role="alert">{error}</p>}
 
         <button type="submit" className="primary-button auth-button">
           {isRegister ? 'Register' : 'Login'}
