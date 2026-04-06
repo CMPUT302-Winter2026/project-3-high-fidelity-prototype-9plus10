@@ -919,6 +919,7 @@ function SearchPage({
   onOpenHome,
 }: SearchPageProps) {
   return (
+    <>
     <section className="page search-page has-footer">
       <div className="top-actions">
         <CircleIconButton id="help-button" label="Help" onClick={onOpenHelp}>
@@ -956,8 +957,9 @@ function SearchPage({
         </div>
       </div>
 
-      <FooterNav active="home" onOpenGroups={onOpenGroups} onOpenHome={onOpenHome} />
     </section>
+    <FooterNav active="home" onOpenGroups={onOpenGroups} onOpenHome={onOpenHome} />
+  </>
   )
 }
 
@@ -999,6 +1001,7 @@ function MapPage({
   }, [word.id])
 
   return (
+    <>
     <section className="page map-page has-footer">
       <div className="map-stage">
         <Wordmap
@@ -1060,8 +1063,9 @@ function MapPage({
         ) : null}
       </div>
 
-      <FooterNav onOpenGroups={onOpenGroups} onOpenHome={onOpenHome} />
     </section>
+    <FooterNav active="home" onOpenGroups={onOpenGroups} onOpenHome={onOpenHome} />
+  </>
   )
 }
 
@@ -1151,6 +1155,7 @@ function WordDetailPage({
   }
 
   return (
+    <>
     <section className="page detail-page has-footer">
       <div className="page-header">
         <IconButton label="Back" onClick={onBack}>
@@ -1237,8 +1242,9 @@ function WordDetailPage({
         placeholder="Add pronunciation notes, examples, or classroom reminders."
       />
 
-      <FooterNav onOpenGroups={onOpenGroups} onOpenHome={onOpenHome} />
     </section>
+    <FooterNav active="home" onOpenGroups={onOpenGroups} onOpenHome={onOpenHome} />
+  </>
   )
 }
 
@@ -1278,6 +1284,7 @@ function SettingsPage({
   onOpenHome,
 }: SettingsPageProps) {
   return (
+    <>
     <section className={`page settings-page ${isMinimal ? '' : 'has-footer'}`.trim()}>
       <div className="page-header">
         <IconButton label="Back" onClick={onBack}>
@@ -1427,8 +1434,9 @@ function SettingsPage({
         </button>
       )}
 
-      {isMinimal ? null : <FooterNav onOpenGroups={onOpenGroups} onOpenHome={onOpenHome} />}
     </section>
+    <FooterNav active="home" onOpenGroups={onOpenGroups} onOpenHome={onOpenHome} />
+    </>
   )
 }
 
@@ -1474,6 +1482,7 @@ function HelpPage({
   ]
 
   return (
+    <>
     <section className="page help-page has-footer">
       <div className="page-header">
         <IconButton label="Back" onClick={onBack}>
@@ -1625,8 +1634,9 @@ function HelpPage({
         ) : null}
       </div>
 
-      <FooterNav onOpenGroups={onOpenGroups} onOpenHome={onOpenHome} />
     </section>
+    <FooterNav active="home" onOpenGroups={onOpenGroups} onOpenHome={onOpenHome} />
+    </>
   )
 }
 
@@ -1692,6 +1702,7 @@ function GroupsPage({
   const isDetailView = groupsView === 'detail' && selectedGroup
 
   return (
+    <>
     <section className="page groups-page has-footer">
       {!isDetailView ? (
         <>
@@ -1841,9 +1852,10 @@ function GroupsPage({
         </div>
       ) : null}
 
-      <FooterNav active="groups" onOpenGroups={onOpenGroups} onOpenHome={onOpenHome} />
     </section>
-  )
+    <FooterNav active="home" onOpenGroups={onOpenGroups} onOpenHome={onOpenHome} />
+    </>
+    )
 }
 
 type FooterNavProps = {
