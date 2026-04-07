@@ -16,9 +16,6 @@ type WordmapProps = {
   searchFocusToken: number
 }
 
-type WordmapPreviewProps = {
-  showSemanticGaps: boolean
-}
 
 type Point = {
   x: number
@@ -38,24 +35,7 @@ export type HoveredConnection = {
 }
 
 const savedViewports = new Map<string, SavedViewport>()
-const appliedSearchTokens = new Map<string, number>()
 
-const mapPositions: Record<string, Point> = {
-  _mamahtawisiwin: { x: 72, y: 112 },
-  _animal: { x: 250, y: 112 },
-  _dog: { x: 170, y: 254 },
-  _panda: { x: 344, y: 214 },
-  _bark: { x: 12, y: 392 },
-  _puppy: { x: 288, y: 382 },
-}
-
-const previewPositions: Point[] = [
-  { x: 178, y: 42 },
-  { x: 88, y: 124 },
-  { x: 252, y: 128 },
-  { x: 162, y: 170 },
-  { x: 54, y: 282 },
-]
 
 function buildNodeLabel(word: Word): string {
   const english = word.english?.trim()
@@ -130,7 +110,6 @@ function buildMapElements(showSemanticGaps: boolean, focusWordId: string): Eleme
       isContext: contextIds.has(word.id) && visibleIds.has(word.id) ? 'true' : 'false',
       hasGap: showSemanticGaps && isSemanticGapWord(word) ? 'true' : 'false',
     },
-    position: mapPositions[word.id] ?? { x: 168, y: 220 },
   }))
 
     const hypoEdges: ElementDefinition[] = words.flatMap((word) =>
@@ -174,51 +153,10 @@ function buildMapElements(showSemanticGaps: boolean, focusWordId: string): Eleme
   return [...nodes, ...hypoEdges, ...relatedEdges]
 }
 
-function buildPreviewElements(showSemanticGaps: boolean): ElementDefinition[] {
-  const sourceWords = showSemanticGaps ? Corpus.Words : Corpus.Words.filter((word) => !isSemanticGapWord(word))
-  const words = sourceWords.slice(0, previewPositions.length)
-  const visibleIds = new Set(words.map((word) => word.id))
 
-  const nodes: ElementDefinition[] = words.map((word, index) => ({
-    data: {
-      id: word.id,
-      wordId: word.id,
-      label: '',
-      hasGap: showSemanticGaps && isSemanticGapWord(word) ? 'true' : 'false',
-    },
-    position: previewPositions[index],
-  }))
-
-    const hypoEdges: ElementDefinition[] = words.flatMap((word) =>
-    word.hypo
-      .filter((childId) => visibleIds.has(childId))
-      .map((childId) => ({
-        data: {
-          id: `preview-${word.id}-${childId}`,
-          source: word.id,
-          target: childId,
-          relationship: 'hierarchy' as const,
-        },
-      })),
-  )
- 
-  const relatedEdges: ElementDefinition[] = words.flatMap((word) =>
-    word.related
-      .filter((relatedId) => visibleIds.has(relatedId))
-      .map((relatedId) => ({
-        data: {
-          id: `preview-${word.id}-${relatedId}`,
-          source: word.id,
-          target: relatedId,
-          relationship: 'related' as const,
-        },
-      })),
-  )
-  return [...nodes, ...hypoEdges, ...relatedEdges]
-}
-
-function syncMapViewport(cy: Core, focusWordId: string, zoomMode: 'default' | 'search' = 'default') {
+function syncMapViewport(cy: Core, focusWordId: string) {
   cy.resize()
+
 
   const focusNode = cy.$id(focusWordId)
 
@@ -227,16 +165,16 @@ function syncMapViewport(cy: Core, focusWordId: string, zoomMode: 'default' | 's
     return
   }
 
-  const focusCluster = focusNode.closedNeighborhood().union(focusNode)
-  cy.fit(focusCluster, zoomMode === 'search' ? 54 : 96)
+  // const focusCluster = focusNode.closedNeighborhood().union(focusNode)
+  // cy.fit(focusCluster, zoomMode === 'search' ? 54 : 96)
   cy.center(focusNode)
 
-  if (zoomMode === 'search') {
-    cy.zoom(Math.min(cy.maxZoom(), cy.zoom() * 1.22))
-    cy.center(focusNode)
-  }
+  // if (zoomMode === 'search') {
+  //   cy.zoom(Math.min(cy.maxZoom(), cy.zoom() * 1.22))
+  //   cy.center(focusNode)
+  // }
 
-  cy.panBy({ x: 0, y: zoomMode === 'search' ? 26 : 52 })
+  // cy.panBy({ x: 0, y: zoomMode === 'search' ? 26 : 52 })
 }
 
 function saveMapViewport(cy: Core, viewKey: string) {
@@ -277,21 +215,21 @@ export default function Wordmap({
 
   function applyViewport(cy: Core) {
     const savedViewport = savedViewports.get(viewKey)
-    const hasFreshSearch = searchFocusToken > 0 && appliedSearchTokens.get(viewKey) !== searchFocusToken
+    // const hasFreshSearch = searchFocusToken > 0 && appliedSearchTokens.get(viewKey) !== searchFocusToken
 
-    if (hasFreshSearch) {
-      syncMapViewport(cy, focusWord.id, 'search')
-      appliedSearchTokens.set(viewKey, searchFocusToken)
-      saveMapViewport(cy, viewKey)
-      return
-    }
+    // if (hasFreshSearch) {
+    //   syncMapViewport(cy, focusWord.id, 'search')
+    //   appliedSearchTokens.set(viewKey, searchFocusToken)
+    //   saveMapViewport(cy, viewKey)
+    //   return
+    // }
 
     if (savedViewport) {
       restoreMapViewport(cy, savedViewport)
       return
     }
 
-    syncMapViewport(cy, focusWord.id, 'default')
+    syncMapViewport(cy, focusWord.id)
     saveMapViewport(cy, viewKey)
   }
 
@@ -320,7 +258,8 @@ export default function Wordmap({
                   refresh: 1,
                   fit: false,
                   padding: 18,
-                  edgeLength: 120,
+                  // edgeLength: 120,
+                  avoidOverlap: true,
                   nodeSpacing: 40,
                 } as cytoscape.LayoutOptions}
         stylesheet={mapStylesheet}
@@ -337,9 +276,10 @@ export default function Wordmap({
             if (selectedId) {
               onSelectWord(selectedId)
             }
+            saveMapViewport(cy, viewKey)
           })
 
-          cy.on('mouseover', 'edge', (event) => {
+          cy.on('tap', 'edge', (event) => {
             const relationshipLabel = event.target.data('relationshipLabel') as string | undefined
             const sourceLabel = event.target.data('sourceLabel') as string | undefined
             const targetLabel = event.target.data('targetLabel') as string | undefined
@@ -355,9 +295,9 @@ export default function Wordmap({
             }
           })
 
-          cy.on('mouseout', 'edge', () => {
-            onHoverConnection(null)
-          })
+          // cy.on('tap', '', () => {
+          //   onHoverConnection(null)
+          // })
 
           cy.on('pan zoom', () => {
             saveMapViewport(cy, viewKey)
@@ -373,27 +313,6 @@ export default function Wordmap({
   )
 }
 
-export function WordmapPreview({ showSemanticGaps }: WordmapPreviewProps) {
-  const elements = useMemo(() => buildPreviewElements(showSemanticGaps), [showSemanticGaps])
-
-  return (
-    <div className="word-map-canvas word-map-canvas-preview" aria-hidden="true">
-      <CytoscapeComponent
-        elements={elements}
-        layout={{ name: 'preset', fit: true, padding: 10, animate: false }}
-        stylesheet={previewStylesheet}
-        cy={(cy: Core) => {
-          cy.removeAllListeners()
-          cy.userZoomingEnabled(false)
-          cy.userPanningEnabled(false)
-          cy.boxSelectionEnabled(false)
-          cy.autoungrabify(true)
-        }}
-        style={{ width: '100%', height: '100%', background: 'transparent' }}
-      />
-    </div>
-  )
-}
 
 function createMapStylesheet({
   hierarchyColor,
@@ -407,9 +326,12 @@ function createMapStylesheet({
       selector: 'node',
       style: {
         label: 'data(label)',
-        width: 108,
-        height: 60,
-        padding: '8px',
+        // width: 108,
+        // height: 60,
+        width: "label",
+        height: "label",
+        "min-width": "99px",
+        padding: '7px',
         shape: 'round-rectangle',
         'background-color': '#ccb8eb',
         color: '#101422',
@@ -431,14 +353,15 @@ function createMapStylesheet({
         'background-color': '#cdb8ee',
         'border-color': '#8a6bc8',
         'border-width': 5,
+        'padding': '5px'
       },
     },
     {
       selector: 'node[variant = "ellipse"]',
       style: {
         shape: 'ellipse',
-        width: 94,
-        height: 54,
+        width: "label",
+        height: "label",
         'background-color': '#a7c8ec',
         'border-color': '#4e90d4',
       },
@@ -447,8 +370,8 @@ function createMapStylesheet({
       selector: 'node[variant = "diamond"]',
       style: {
         shape: 'diamond',
-        width: 102,
-        height: 56,
+        width: "label",
+        height: "label",
         'background-color': '#dea1c4',
         'border-color': '#b96596',
         'font-size': 11,
@@ -458,8 +381,8 @@ function createMapStylesheet({
     {
       selector: 'node[isFocus = "true"]',
       style: {
-        width: 138,
-        height: 76,
+        width: "label",
+        height: "label",
         padding: '12px',
         'border-width': 5,
         'font-size': 14,
@@ -490,9 +413,6 @@ function createMapStylesheet({
       selector: 'edge',
       style: {
         width: 2.5,
-        // 'curve-style': 'unbundled-bezier',
-        'control-point-distances': [40],   // how far the curve bows out (px)
-        'control-point-weights': [0.5],    // where along the edge the peak sits (0–1)
         'line-color': 'rgba(214, 220, 227, 0.54)',
         'target-arrow-shape': 'triangle',
         'target-arrow-color': 'rgba(214, 220, 227, 0.54)',
@@ -540,45 +460,3 @@ function createMapStylesheet({
   ]
 }
 
-const previewStylesheet: StylesheetJsonBlock[] = [
-  {
-    selector: 'node',
-    style: {
-      label: 'data(label)',
-      width: 72,
-      height: 36,
-      shape: 'ellipse',
-      'background-color': 'rgba(247, 244, 239, 0.64)',
-      'border-width': 1.5,
-      'border-color': 'rgba(217, 212, 203, 0.22)',
-      color: 'transparent',
-      opacity: 0.7,
-    },
-  },
-  {
-    selector: 'node[hasGap = "true"]',
-    style: {
-      'border-style': 'dashed',
-      'border-color': 'rgba(244, 200, 115, 0.42)',
-    },
-  },
-  {
-    selector: 'edge',
-    style: {
-      width: 2.2,
-      'line-color': 'rgba(231, 231, 231, 0.48)',
-      'target-arrow-color': 'rgba(231, 231, 231, 0.48)',
-      'target-arrow-shape': 'triangle',
-      'arrow-scale': 0.9,
-      'curve-style': 'straight',
-      opacity: 0.62,
-    },
-  },
-  {
-    selector: 'edge[relationship = "related"]',
-    style: {
-      'target-arrow-shape': 'none',
-      'line-style': 'dashed',
-    },
-  },
-]

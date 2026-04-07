@@ -86,7 +86,7 @@ const matchScores: Record<string, number> = {
 
 function App() {
   const fallbackWord = Corpus.Words[0]
-  const defaultWord = findWordByQuery('dog') ?? fallbackWord
+  const defaultWord = fallbackWord
   const [loggedInEmail, setLoggedInEmail] = useState<string | null>(null) // ADDED: tracks who is logged in  const [screen, setScreen] = useState<Screen>('login')
   const [screen, setScreen] = useState<Screen>('login')
   const [showTutorial, setShowTutorial] = useState(false);
@@ -945,6 +945,7 @@ function SearchPage({
               value={searchValue}
               onChange={(event) => onSearchValueChange(event.target.value)}
               placeholder="Search for an English or Cree word"
+              required={true}
             />
             <span className="search-submit search-submit-inline search-submit-decorative" aria-hidden="true">
               <SearchIcon />
