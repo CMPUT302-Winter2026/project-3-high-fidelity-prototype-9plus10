@@ -1,37 +1,81 @@
+/* ============================================================
+   DESIGN TOKENS
+   ============================================================ */
+
 :root {
+  /* Typography */
   --font-scale: 18px;
+
+  /* Brand Colors */
   --english-chip: #7ea6e9;
   --cree-chip: #cba0bd;
+
+  /* Semantic Node Colors */
   --semantic-color-1: #ef7b7b;
   --semantic-color-2: #7ea6e9;
   --semantic-color-3: #a8d27f;
+
+  /* Background Gradient */
   --bg-top: #214f5c;
   --bg-bottom: #24246f;
+
+  /* Accent: Mint (positive / confirm) */
   --mint: #a7ebc9;
   --mint-border: #7dc2bd;
-  --panel: #efefef;
-  --panel-strong: #ffffff;
-  --ink: #102742;
-  --line: #17283c;
+
+  /* Accent: Peach (danger / warning) */
   --peach: #f58f8b;
   --peach-border: #e26662;
-  --shadow: 0 24px 54px rgba(8, 18, 34, 0.28);
+
+  /* Accent: Teal (primary action) */
+  --teal: #a7c7cf;
+  --teal-border: #5f96a6;
+
+  /* Accent: Blue (nav actions) */
+  --blue: #3b82f6;
+  --blue-border: #1d4ed8;
+
+  /* Surfaces */
+  --panel: #efefef;
+  --panel-strong: #ffffff;
+  --panel-bg: rgba(239, 239, 239, 0.96);
+  --panel-bg-strong: rgba(247, 247, 247, 0.98);
+  --panel-bg-white: rgba(255, 255, 255, 0.98);
+
+  /* Text */
+  --ink: #102742;
+  --ink-dark: #111111;
+  --ink-mid: #101010;
+  --line: #17283c;
+
+  /* Borders */
   --surface-border: rgba(255, 255, 255, 0.42);
+  --input-border: rgba(23, 40, 60, 0.82);
+  --card-border: rgba(16, 39, 66, 0.54);
+
+  /* Shadows */
   --surface-shadow: 0 12px 28px rgba(8, 18, 34, 0.14);
   --surface-shadow-strong: 0 16px 36px rgba(8, 18, 34, 0.18);
-  --press-shadow: 0 6px 16px rgba(8, 18, 34, 0.16);
+  --chunky-shadow: 6px 6px 0px rgba(8, 18, 34, 0.45);
+  --button-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.44);
+  --top-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.82);
   --focus-ring: 0 0 0 4px rgba(167, 235, 201, 0.18);
+
+  /* Shape */
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-pill: 999px;
+
+  /* Transitions */
+  --transition-speed: 0.18s;
 }
 
-.app-shell {
-  height: 100svh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
-  color: #ffffff;
-  font-size: var(--font-scale);
-}
+
+/* ============================================================
+   GLOBAL TRANSITIONS
+   ============================================================ */
 
 button,
 input,
@@ -41,7 +85,6 @@ textarea,
 .settings-card,
 .group-summary,
 .group-list-item,
-.group-overview-card,
 .group-word-row,
 .group-modal-card,
 .help-sheet,
@@ -50,11 +93,26 @@ textarea,
 .word-chip,
 .settings-title {
   transition:
-    transform 0.18s ease,
-    box-shadow 0.18s ease,
-    border-color 0.18s ease,
-    background-color 0.18s ease,
-    opacity 0.18s ease;
+    transform var(--transition-speed) ease,
+    box-shadow var(--transition-speed) ease,
+    border-color var(--transition-speed) ease,
+    background-color var(--transition-speed) ease,
+    opacity var(--transition-speed) ease;
+}
+
+
+/* ============================================================
+   APP SHELL & PHONE FRAME
+   ============================================================ */
+
+.app-shell {
+  height: 100svh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  color: #ffffff;
+  font-size: var(--font-scale);
 }
 
 .phone-shell {
@@ -90,7 +148,7 @@ textarea,
   width: 14px;
   height: 14px;
   margin-left: -44px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: radial-gradient(circle at 35% 35%, #4b6d91, #111d2b 70%);
 }
 
@@ -100,7 +158,7 @@ textarea,
   width: 88px;
   height: 10px;
   margin-left: -18px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: #0b1724;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
@@ -108,7 +166,7 @@ textarea,
 .phone-button {
   right: -4px;
   width: 4px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: rgba(10, 15, 22, 0.9);
 }
 
@@ -126,14 +184,17 @@ textarea,
   position: relative;
   width: min(100%, 390px);
   aspect-ratio: 9 / 19.5;
-  /* ← add this */
   background: linear-gradient(180deg, var(--bg-top) 0%, #203d63 42%, var(--bg-bottom) 100%);
   overflow: hidden;
-  box-shadow: var(--shadow);
   border-radius: 30px;
   border: 4px solid #0a141f;
   isolation: isolate;
 }
+
+
+/* ============================================================
+   PAGE LAYOUT
+   ============================================================ */
 
 .page {
   overflow-y: auto;
@@ -172,6 +233,11 @@ textarea,
 .page-header-actions {
   gap: 10px;
 }
+
+
+/* ============================================================
+   AUTH / BRAND
+   ============================================================ */
 
 .brand-lockup {
   display: flex;
@@ -223,52 +289,7 @@ textarea,
   flex-direction: column;
   align-items: flex-start;
   gap: 6px;
-  color: #f8f8ff;
   font-size: 1.15rem;
-}
-
-.field-label input,
-.search-form input,
-.settings-card select,
-.group-summary select,
-.group-picker select,
-.notes-panel textarea {
-  width: 100%;
-  border-radius: 14px;
-  border: 2px solid rgba(23, 40, 60, 0.82);
-  padding: 12px 16px;
-  background: rgba(255, 255, 255, 0.98);
-  color: #121212;
-  outline: none;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.72),
-    0 6px 16px rgba(8, 18, 34, 0.08);
-}
-
-.field-label input:focus,
-.search-form input:focus,
-.settings-card select:focus,
-.group-summary select:focus,
-.group-picker select:focus,
-.notes-panel textarea:focus {
-  border-color: var(--mint-border);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.72),
-    var(--focus-ring),
-    0 10px 24px rgba(8, 18, 34, 0.12);
-}
-
-.text-link {
-  border: 0;
-  background: transparent;
-  color: #8fb5ff;
-  padding: 0;
-  text-decoration: underline;
-  cursor: pointer;
-}
-
-.align-left {
-  margin-top: -2px;
 }
 
 .auth-button {
@@ -286,13 +307,82 @@ textarea,
   font-size: 0.95em;
 }
 
-.circle-icon-button,
-.icon-button,
-.search-submit,
-.speaker-button,
-.swatch-button {
+.align-left {
+  margin-top: -2px;
+}
+
+.text-link {
   border: 0;
+  background: transparent;
+  color: #8fb5ff;
+  padding: 0;
+  text-decoration: underline;
   cursor: pointer;
+}
+
+
+/* ============================================================
+   SHARED FORM INPUTS
+   ============================================================ */
+
+.field-label input,
+.search-form input,
+.settings-card select,
+.group-summary select,
+.group-picker select,
+.notes-panel textarea {
+  width: 100%;
+  border-radius: var(--radius-md);
+  border: 2px solid var(--input-border);
+  padding: 12px 16px;
+  background: var(--panel-bg-white);
+  color: #121212;
+  outline: none;
+  box-shadow:
+    var(--top-highlight),
+    0 6px 16px rgba(8, 18, 34, 0.08);
+}
+
+.field-label input:focus,
+.search-form input:focus,
+.settings-card select:focus,
+.group-summary select:focus,
+.group-picker select:focus,
+.notes-panel textarea:focus {
+  border-color: var(--mint-border);
+  box-shadow:
+    var(--top-highlight),
+    var(--focus-ring),
+    0 10px 24px rgba(8, 18, 34, 0.12);
+}
+
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+
+/* Base: every button gets the chunky shadow + top highlight.
+   Exceptions opt out below. */
+button {
+  cursor: pointer;
+  box-shadow:
+    var(--button-highlight),
+    var(--chunky-shadow);
+}
+
+/* Chunky press effect: button sinks diagonally into its own shadow. */
+button:active {
+  transform: translate(6px, 6px);
+  box-shadow: none;
+}
+
+/* Transparent / decorative buttons — no shadow */
+.icon-button,
+.speaker-button,
+.search-submit-inline,
+.text-link,
+.group-word-open {
+  box-shadow: none;
 }
 
 .circle-icon-button {
@@ -301,13 +391,10 @@ textarea,
   width: 54px;
   height: 54px;
   padding: 0;
+  border: 0;
   color: #f2d5ef;
   background: rgba(94, 152, 165, 0.98);
-  border-radius: 999px;
-  box-shadow:
-    inset 0 0 0 2px rgba(43, 88, 101, 0.92),
-    inset 0 1px 0 rgba(210, 236, 241, 0.3),
-    var(--surface-shadow);
+  border-radius: var(--radius-pill);
 }
 
 .circle-icon-button .svg-icon {
@@ -321,9 +408,10 @@ textarea,
   width: 40px;
   height: 40px;
   padding: 0;
+  border: 0;
   color: #8cc7d4;
   background: transparent;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
 }
 
 .icon-button .svg-icon {
@@ -331,19 +419,68 @@ textarea,
   height: 34px;
 }
 
-.settings-title {
+.danger-button,
+.primary-button,
+.logout-button {
+  border: 2px solid transparent;
+  border-radius: var(--radius-md);
+  padding: 12px 18px;
+  font-size: 1.05rem;
+}
+
+.primary-button {
+  background: var(--teal);
+  border-color: var(--teal-border);
+  color: var(--ink);
+}
+
+.danger-button,
+.logout-button {
+  background: var(--peach);
+  border-color: var(--peach-border);
+  color: var(--ink-dark);
+}
+
+.logout-button {
+  align-self: center;
+  padding-inline: 28px;
+  margin-top: 6px;
+}
+
+
+/* ============================================================
+   SETTINGS TITLE (shared title-bar widget)
+   ============================================================ */
+
+.page-title {
   flex: 1;
   text-align: center;
   background: rgba(240, 240, 240, 0.95);
-  color: #111111;
-  border-radius: 14px;
+  color: var(--ink-dark);
+  border-radius: var(--radius-md);
   padding: 12px 16px;
   font-size: 1.28rem;
   border: 1px solid var(--surface-border);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.82),
+    var(--top-highlight),
     var(--surface-shadow);
 }
+
+
+/* ============================================================
+   SVG ICON
+   ============================================================ */
+
+.svg-icon {
+  width: 24px;
+  height: 24px;
+  display: block;
+}
+
+
+/* ============================================================
+   SEARCH PAGE
+   ============================================================ */
 
 .search-page {
   position: relative;
@@ -429,14 +566,11 @@ textarea,
   width: 52px;
   height: 52px;
   padding: 0;
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   background: rgba(240, 240, 240, 0.95);
   color: #7350a5;
-  border: 2px solid rgba(23, 40, 60, 0.82);
+  border: 2px solid var(--input-border);
   flex: 0 0 52px;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.82),
-    var(--surface-shadow);
 }
 
 .search-submit-inline {
@@ -453,6 +587,11 @@ textarea,
 .search-submit-decorative {
   pointer-events: none;
 }
+
+
+/* ============================================================
+   MAP PAGE
+   ============================================================ */
 
 .map-page {
   padding: 0 0 124px;
@@ -483,7 +622,7 @@ textarea,
 
 .map-search-form input {
   padding-right: 48px;
-  background: rgba(255, 255, 255, 0.98);
+  background: var(--panel-bg-white);
 }
 
 .map-header-actions {
@@ -543,8 +682,8 @@ textarea,
   color: #11243c;
   border: 1px solid rgba(255, 255, 255, 0.48);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.72),
-    var(--surface-shadow-strong);
+    var(--top-highlight),
+    var(--surface-shadow);
   pointer-events: none;
   backdrop-filter: blur(12px);
   max-width: 250px;
@@ -566,7 +705,7 @@ textarea,
 }
 
 .map-hover-badge {
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   padding: 4px 9px;
   font-size: 0.72rem;
   font-weight: 700;
@@ -605,6 +744,11 @@ textarea,
   line-height: 1.35;
 }
 
+
+/* ============================================================
+   WORD DETAIL PAGE
+   ============================================================ */
+
 .detail-page {
   display: flex;
   flex-direction: column;
@@ -622,7 +766,7 @@ textarea,
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   padding: 10px 12px;
   color: #0f1830;
   border: 1px solid rgba(255, 255, 255, 0.45);
@@ -646,7 +790,7 @@ textarea,
   height: 26px;
   padding: 0;
   background: rgba(255, 255, 255, 0.44);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   color: #ffffff;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.48);
 }
@@ -689,17 +833,22 @@ textarea,
   color: rgba(255, 255, 255, 0.82);
 }
 
+
+/* ============================================================
+   SHARED SURFACE CARDS (info, settings, group panels)
+   ============================================================ */
+
 .info-panel,
 .settings-card,
 .group-summary,
 .group-list-item {
-  background: rgba(239, 239, 239, 0.96);
-  color: #111111;
-  border-radius: 20px;
+  background: var(--panel-bg);
+  color: var(--ink-dark);
+  border-radius: var(--radius-lg);
   padding: 16px;
   border: 1px solid var(--surface-border);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.82),
+    var(--top-highlight),
     var(--surface-shadow);
   backdrop-filter: blur(10px);
 }
@@ -732,6 +881,11 @@ textarea,
   margin: 8px 0 10px 24px;
   padding: 0;
 }
+
+
+/* ============================================================
+   GROUP PICKER & NOTES PANEL
+   ============================================================ */
 
 .group-picker {
   display: flex;
@@ -788,7 +942,7 @@ textarea,
 }
 
 .notes-save-confirmation {
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   border: 1px solid rgba(167, 235, 201, 0.46);
   background: rgba(167, 235, 201, 0.18);
   color: #eafff2;
@@ -801,8 +955,8 @@ textarea,
   opacity: 0;
   transform: translateY(4px);
   transition:
-    opacity 0.18s ease,
-    transform 0.18s ease;
+    opacity var(--transition-speed) ease,
+    transform var(--transition-speed) ease;
 }
 
 .notes-save-confirmation-visible {
@@ -813,8 +967,13 @@ textarea,
 .notes-panel textarea {
   min-height: 130px;
   resize: vertical;
-  color: #111111;
+  color: var(--ink-dark);
 }
+
+
+/* ============================================================
+   SETTINGS PAGE
+   ============================================================ */
 
 .settings-page {
   display: flex;
@@ -842,9 +1001,7 @@ textarea,
   border-radius: 12px;
   border: 0;
   padding: 6px 10px;
-  background: #cfd4cf;
-  color: #173018;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  background: var(--peach);
 }
 
 .toggle-switch-on {
@@ -895,7 +1052,7 @@ textarea,
 .semantic-gap-shape-circle {
   width: 36px;
   height: 36px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   border: 3px solid #4e90d4;
   background: rgba(167, 200, 236, 0.95);
 }
@@ -951,9 +1108,6 @@ textarea,
   height: 24px;
   border-radius: 8px;
   border: 2px solid transparent;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.42),
-    0 4px 10px rgba(8, 18, 34, 0.12);
 }
 
 .swatch-button-selected {
@@ -987,37 +1141,10 @@ textarea,
   padding: 8px 10px;
 }
 
-.danger-button,
-.primary-button,
-.logout-button {
-  border: 2px solid transparent;
-  border-radius: 14px;
-  padding: 12px 18px;
-  cursor: pointer;
-  font-size: 1.05rem;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.5),
-    var(--surface-shadow);
-}
 
-.primary-button {
-  background: #a7c7cf;
-  border-color: #5f96a6;
-  color: #0f1830;
-}
-
-.danger-button,
-.logout-button {
-  background: var(--peach);
-  border-color: var(--peach-border);
-  color: #111111;
-}
-
-.logout-button {
-  align-self: center;
-  padding-inline: 28px;
-  margin-top: 6px;
-}
+/* ============================================================
+   HELP PAGE
+   ============================================================ */
 
 .help-page {
   display: flex;
@@ -1033,15 +1160,11 @@ textarea,
 
 .help-tab {
   border: 0;
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   padding: 12px 8px;
-  background: rgba(239, 239, 239, 0.96);
-  color: #101010;
+  background: var(--panel-bg);
+  color: var(--ink-mid);
   cursor: pointer;
-  box-shadow:
-    inset 0 0 0 1px rgba(17, 32, 50, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.75),
-    var(--surface-shadow);
 }
 
 .help-tab-active {
@@ -1053,13 +1176,13 @@ textarea,
 .help-sheet {
   flex: 1;
   overflow: auto;
-  background: rgba(247, 247, 247, 0.98);
+  background: var(--panel-bg-strong);
   color: #0f1721;
   border-radius: 22px;
   border: 1px solid rgba(255, 255, 255, 0.45);
   padding: 18px 16px 22px;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.82),
+    var(--top-highlight),
     var(--surface-shadow-strong);
 }
 
@@ -1113,7 +1236,7 @@ textarea,
 
 .help-shape-english {
   min-width: 96px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   border: 3px solid #4e90d4;
   background: rgba(167, 200, 236, 0.95);
 }
@@ -1153,6 +1276,11 @@ textarea,
   border-top-style: dashed;
 }
 
+
+/* ============================================================
+   GROUPS PAGE
+   ============================================================ */
+
 .groups-page {
   display: flex;
   flex-direction: column;
@@ -1171,15 +1299,14 @@ textarea,
 }
 
 .group-detail-title,
-.group-overview-card,
 .group-word-row {
-  border-radius: 14px;
-  border: 2px solid rgba(16, 39, 66, 0.54);
+  border-radius: var(--radius-md);
+  border: 2px solid var(--card-border);
   background: rgba(247, 247, 247, 0.96);
   color: #101010;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.76),
-    var(--surface-shadow);
+    var(--chunky-shadow);
 }
 
 .groups-overview-list,
@@ -1197,26 +1324,24 @@ textarea,
 .group-overview-card {
   width: 100%;
   padding: 14px 18px;
+  border-radius: var(--radius-md);
+  border: 2px solid #5d9fb0;
   background: rgba(175, 210, 217, 0.92);
-  border-color: #5d9fb0;
+  color: #101010;
   font-size: 1.12rem;
-  cursor: pointer;
 }
 
 .create-group-button,
 .delete-group-button,
 .group-modal-action {
   align-self: center;
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   border: 2px solid #6aa12f;
   background: #bddba6;
-  color: #101010;
+  color: var(--ink-mid);
   padding: 14px 22px;
   font-size: 1.05rem;
   cursor: pointer;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.44),
-    var(--surface-shadow);
 }
 
 .add-words-button {
@@ -1249,14 +1374,11 @@ textarea,
 .group-remove-button {
   min-width: 42px;
   min-height: 42px;
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   border: 2px solid #ef7474;
   background: #f8b0b0;
-  color: #111111;
+  color: var(--ink-dark);
   cursor: pointer;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.42),
-    0 6px 14px rgba(8, 18, 34, 0.12);
 }
 
 .group-notes {
@@ -1276,7 +1398,7 @@ textarea,
   border-radius: 18px;
   border: 2px solid rgba(16, 39, 66, 0.84);
   resize: vertical;
-  color: #111111;
+  color: var(--ink-dark);
 }
 
 .delete-group-button {
@@ -1285,6 +1407,11 @@ textarea,
   background: #f4a29b;
   border-color: #e1695e;
 }
+
+
+/* ============================================================
+   GROUP MODAL
+   ============================================================ */
 
 .group-modal-backdrop {
   position: absolute;
@@ -1297,13 +1424,13 @@ textarea,
 
 .group-modal-card {
   width: calc(100% - 56px);
-  border-radius: 28px;
-  background: rgba(247, 247, 247, 0.98);
+  border-radius: var(--radius-xl);
+  background: var(--panel-bg-strong);
   border: 1px solid rgba(255, 255, 255, 0.5);
   padding: 14px 18px 18px;
-  color: #111111;
+  color: var(--ink-dark);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.82),
+    var(--top-highlight),
     0 18px 42px rgba(8, 18, 34, 0.24);
   backdrop-filter: blur(14px);
 }
@@ -1327,12 +1454,12 @@ textarea,
 
 .group-modal-card input {
   width: 100%;
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   border: 2px solid rgba(16, 39, 66, 0.82);
   padding: 12px 14px;
   margin-bottom: 12px;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.72),
+    var(--top-highlight),
     0 6px 16px rgba(8, 18, 34, 0.08);
 }
 
@@ -1350,7 +1477,7 @@ textarea,
 .group-add-word {
   border: 2px solid rgba(16, 39, 66, 0.2);
   background: #ffffff;
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   padding: 10px 12px;
   text-align: left;
   cursor: pointer;
@@ -1367,6 +1494,11 @@ textarea,
 .group-add-word small {
   color: #6a6480;
 }
+
+
+/* ============================================================
+   FOOTER NAV
+   ============================================================ */
 
 .footer-nav {
   position: sticky;
@@ -1390,15 +1522,36 @@ textarea,
   pointer-events: auto;
   cursor: pointer;
   padding: 18px 14px 14px;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.5),
-    0 -10px 24px rgba(8, 18, 34, 0.12);
 }
 
 .footer-tab-active {
   filter: brightness(1.04);
   transform: translateY(-2px);
 }
+
+.nav-button {
+  position: absolute;
+  bottom: 0;
+  border: 4px solid var(--blue-border);
+  border-radius: var(--radius-md);
+  background: var(--blue);
+  color: #ffffff;
+  margin: 8px;
+  padding: 4px 8px;
+}
+
+.nav-button-home {
+  right: 0;
+}
+
+.nav-button-groups {
+  left: 0;
+}
+
+
+/* ============================================================
+   CONFIRMATION DIALOG
+   ============================================================ */
 
 .confirmation-backdrop {
   position: absolute;
@@ -1414,12 +1567,12 @@ textarea,
 .confirmation-dialog {
   width: min(100%, 360px);
   overflow: hidden;
-  border-radius: 28px;
-  background: rgba(247, 247, 247, 0.98);
-  border: 4px solid #5f96a6;
-  color: #111111;
+  border-radius: var(--radius-xl);
+  background: var(--panel-bg-strong);
+  border: 4px solid var(--teal-border);
+  color: var(--ink-dark);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.82),
+    var(--top-highlight),
     0 18px 42px rgba(8, 18, 34, 0.24);
 }
 
@@ -1462,19 +1615,16 @@ textarea,
 
 .confirmation-button {
   flex: 1;
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   border: 4px solid transparent;
   padding: 10px 14px;
   font-size: 1.1rem;
   cursor: pointer;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.42),
-    var(--surface-shadow);
 }
 
 .confirmation-button-confirm {
-  background: #a7c7cf;
-  border-color: #5f96a6;
+  background: var(--teal);
+  border-color: var(--teal-border);
   color: #081c2c;
 }
 
@@ -1484,45 +1634,10 @@ textarea,
   color: #220706;
 }
 
-.circle-icon-button:hover,
-.search-submit:hover,
-.help-tab:hover,
-.group-overview-card:hover,
-.create-group-button:hover,
-.delete-group-button:hover,
-.group-modal-action:hover,
-.group-add-word:hover,
-.footer-tab:hover,
-.danger-button:hover,
-.primary-button:hover,
-.logout-button:hover,
-.confirmation-button:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--surface-shadow-strong);
-}
 
-.circle-icon-button:active,
-.search-submit:active,
-.help-tab:active,
-.group-overview-card:active,
-.create-group-button:active,
-.delete-group-button:active,
-.group-modal-action:active,
-.group-add-word:active,
-.footer-tab:active,
-.danger-button:active,
-.primary-button:active,
-.logout-button:active,
-.confirmation-button:active {
-  transform: translateY(0);
-  box-shadow: var(--press-shadow);
-}
-
-.svg-icon {
-  width: 24px;
-  height: 24px;
-  display: block;
-}
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
 
 @keyframes page-rise {
   from {
@@ -1547,6 +1662,11 @@ textarea,
     transform: translateY(-8px);
   }
 }
+
+
+/* ============================================================
+   RESPONSIVE — MOBILE (≤420px)
+   ============================================================ */
 
 @media (max-width: 420px) {
   .app-shell {
@@ -1576,11 +1696,7 @@ textarea,
     flex-direction: column;
   }
 
-  .group-picker {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
+  .group-picker,
   .group-picker-controls {
     flex-direction: column;
     align-items: stretch;

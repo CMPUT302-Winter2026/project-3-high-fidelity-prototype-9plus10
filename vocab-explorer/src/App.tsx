@@ -101,7 +101,7 @@ function App() {
   const [helpSection, setHelpSection] = useState<HelpSection>('how')
   const [searchValue, setSearchValue] = useState('')
   const [activeWordId, setActiveWordId] = useState(defaultWord.id)
-  const [semanticGaps, setSemanticGaps] = useState(true)
+  const [semanticGaps, setSemanticGaps] = useState(false)
   const [fontSize, setFontSize] = useState(18)
   const [contrastColor, setContrastColor] = useState(semanticSwatches[0].value)
   const [hierarchyColor, setHierarchyColor] = useState(semanticSwatches[4].value)
@@ -1163,6 +1163,10 @@ function WordDetailPage({
     showGroupSaveMessage(result === 'saved' ? 'Saved' : 'Already saved')
   }
 
+  function wordGroupButtons(){
+    return "not implemented"
+  }
+  
   return (
     <>
     <section className="page detail-page has-footer">
@@ -1300,7 +1304,7 @@ function SettingsPage({
           <BackIcon />
         </IconButton>
 
-        <div className="settings-title">Settings</div>
+        <div className="page-title">Settings</div>
       </div>
 
       <div className="settings-card toggle-card">
@@ -1415,19 +1419,19 @@ function SettingsPage({
           <div className="password-grid">
             <label className="field-label compact-field">
               <span>Old Password:</span>
-              <input type="password" defaultValue="********" />
+              <input type="password" placeholder='OldPass123' />
             </label>
 
             <label className="field-label compact-field">
               <span>New Password:</span>
-              <input type="password" defaultValue="**********" />
+              <input type="password" placeholder='OldPass123' />
             </label>
           </div>
 
           <div className="password-grid password-grid-reset">
             <label className="field-label compact-field">
               <span>Confirm Password:</span>
-              <input type="password" defaultValue="**********" />
+              <input type="password" placeholder='CoolNewPass456' />
             </label>
 
             <button type="button" className="danger-button">
@@ -1498,7 +1502,7 @@ function HelpPage({
           <BackIcon />
         </IconButton>
 
-        <div className="settings-title">Help</div>
+        <div className="page-title">Help</div>
       </div>
 
       <div className="help-tab-grid">
@@ -1757,7 +1761,8 @@ function GroupsPage({
               <BackIcon />
             </IconButton>
 
-            <div className="group-detail-title">{selectedGroup.name}</div>
+            <div className="page-title
+  ">{selectedGroup.name}</div>
           </div>
 
           <div className="group-detail-list">
