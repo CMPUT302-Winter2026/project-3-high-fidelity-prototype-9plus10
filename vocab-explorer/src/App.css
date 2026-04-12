@@ -54,10 +54,9 @@
   --card-border: rgba(16, 39, 66, 0.54);
 
   /* Shadows */
-  --shadow: 0 24px 54px rgba(8, 18, 34, 0.28);
   --surface-shadow: 0 12px 28px rgba(8, 18, 34, 0.14);
   --surface-shadow-strong: 0 16px 36px rgba(8, 18, 34, 0.18);
-  --chunky-shadow: 4px 4px 0px rgba(8, 18, 34, 0.45);
+  --chunky-shadow: 6px 6px 0px rgba(8, 18, 34, 0.45);
   --button-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.44);
   --top-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.82);
   --focus-ring: 0 0 0 4px rgba(167, 235, 201, 0.18);
@@ -187,7 +186,6 @@ textarea,
   aspect-ratio: 9 / 19.5;
   background: linear-gradient(180deg, var(--bg-top) 0%, #203d63 42%, var(--bg-bottom) 100%);
   overflow: hidden;
-  box-shadow: var(--shadow);
   border-radius: 30px;
   border: 4px solid #0a141f;
   isolation: isolate;
@@ -374,7 +372,7 @@ button {
 
 /* Chunky press effect: button sinks diagonally into its own shadow. */
 button:active {
-  transform: translate(4px, 4px);
+  transform: translate(6px, 6px);
   box-shadow: none;
 }
 
@@ -685,7 +683,7 @@ button:active {
   border: 1px solid rgba(255, 255, 255, 0.48);
   box-shadow:
     var(--top-highlight),
-    var(--surface-shadow-strong);
+    var(--surface-shadow);
   pointer-events: none;
   backdrop-filter: blur(12px);
   max-width: 250px;

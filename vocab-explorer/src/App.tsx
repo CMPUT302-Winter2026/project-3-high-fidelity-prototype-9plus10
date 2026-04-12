@@ -101,7 +101,7 @@ function App() {
   const [helpSection, setHelpSection] = useState<HelpSection>('how')
   const [searchValue, setSearchValue] = useState('')
   const [activeWordId, setActiveWordId] = useState(defaultWord.id)
-  const [semanticGaps, setSemanticGaps] = useState(true)
+  const [semanticGaps, setSemanticGaps] = useState(false)
   const [fontSize, setFontSize] = useState(18)
   const [contrastColor, setContrastColor] = useState(semanticSwatches[0].value)
   const [hierarchyColor, setHierarchyColor] = useState(semanticSwatches[4].value)
