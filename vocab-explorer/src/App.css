@@ -175,6 +175,7 @@ textarea,
 
 .brand-lockup {
   display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 14px;
   margin-top: 18px;
@@ -187,15 +188,15 @@ textarea,
   line-height: 0.94;
   font-family: 'Comic Sans MS', 'Trebuchet MS', cursive;
   letter-spacing: 0.02em;
-  text-align: left;
+  text-align: center;
 }
 
 .screen-subtitle {
-  margin-top: 10px;
-  max-width: 210px;
+  margin: 10px auto 0;
   color: rgba(255, 255, 255, 0.82);
   line-height: 1.35;
-  text-align: left;
+  text-align: center;
+  display: block;
 }
 
 .logo-tile {
