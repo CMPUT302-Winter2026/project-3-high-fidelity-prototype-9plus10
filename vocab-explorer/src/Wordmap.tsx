@@ -412,11 +412,11 @@ function createMapStylesheet({
     {
       selector: 'edge',
       style: {
-        width: 2.5,
+        width: 5,
         'line-color': 'rgba(214, 220, 227, 0.54)',
         'target-arrow-shape': 'triangle',
         'target-arrow-color': 'rgba(214, 220, 227, 0.54)',
-        'arrow-scale': 1.1,
+        'arrow-scale': 1.25,
         opacity: 0.7,
         'curve-style': 'straight',
       },
@@ -424,29 +424,23 @@ function createMapStylesheet({
     {
       selector: 'edge[relationship = "hierarchy"]',
       style: {
-        width: 3.2,
         'line-color': hierarchyColor,
         'target-arrow-color': hierarchyColor,
         'target-arrow-shape': 'triangle',
-        'arrow-scale': 1.15,
       },
     },
     {
       selector: 'edge[relationship = "related"]',
       style: {
-        width: 2.8,
         'line-color': relatedColor,
         'target-arrow-shape': 'none',
         'target-arrow-color': relatedColor,
         'line-style': 'dashed',
-        opacity: 0.88,
       },
     },
     {
       selector: 'edge[isFocusConnection = "true"]',
       style: {
-        width: 4.6,
-        'arrow-scale': 1.3,
         opacity: 1,
       },
     },

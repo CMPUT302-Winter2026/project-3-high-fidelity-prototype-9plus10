@@ -834,14 +834,14 @@ function AuthPage({ mode, onPrimaryAction, onSwitchMode, onOpenSettings }: AuthP
       </div>
 
       <div className="brand-lockup">
-        <div>
-          <h1>Vocabulary Explorer</h1>
-          <p className="screen-subtitle">
-            Explore English and Cree vocabulary through search, maps, and word cards.
-          </p>
-        </div>
         <div className="logo-tile" aria-hidden="true">
           <SearchIcon />
+        </div>
+        <div>
+          <h1>Vocabulary Explorer</h1>
+          <sub className="screen-subtitle">
+            Explore English and Cree vocabulary through search, maps, and word cards.
+          </sub>
         </div>
       </div>
 
@@ -875,26 +875,34 @@ function AuthPage({ mode, onPrimaryAction, onSwitchMode, onOpenSettings }: AuthP
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="••••••••"
             />
+
+          <button type="submit" className="p-4 primary-button auth-button">
+            {isRegister ? 'Register' : 'Login'}
+          </button>
+
           </label>
         ) : (
-          <button type="button" className="text-link align-left">
+          <div className='flex  justify-between items-center w-full'>
+          <button type="button" className=" w-fit text-link align-left ">
             Forgot your password?
           </button>
+          <button type="submit" className=" primary-button auth-button ">
+            {isRegister ? 'Register' : 'Login'}
+          </button>
+        </div>
         )}
 
         {error && <p className="auth-error" role="alert">{error}</p>}
 
-        <button type="submit" className="primary-button auth-button">
-          {isRegister ? 'Register' : 'Login'}
-        </button>
-      </form>
-
-      <p className="switch-copy">
-        {isRegister ? 'Already have an account?' : 'New User?'}{' '}
+              </form>
+      <div className='flex flex-col items-center '>
+        <p className="switch-copy">
+          {isRegister ? 'Already have an account?' : 'New to vocab explorer?'}{' '}
+        </p>
         <button type="button" className="text-link inline-link" onClick={onSwitchMode}>
-          {isRegister ? 'Login!' : 'Register here!'}
+          {isRegister ? 'Login!' : 'Create an account here!'}
         </button>
-      </p>
+      </div>
     </section>
   )
 }
