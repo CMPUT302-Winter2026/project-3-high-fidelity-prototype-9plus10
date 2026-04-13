@@ -1549,7 +1549,7 @@ button:active,
   z-index: 4;
   display: grid;
   place-items: center;
-  background: rgba(9, 16, 28, 0.18);
+  background: rgba(0, 0, 0, 0.45);
 }
 
 .group-modal-card {
@@ -1562,7 +1562,6 @@ button:active,
   box-shadow:
     var(--top-highlight),
     0 18px 42px rgba(8, 18, 34, 0.24);
-  backdrop-filter: blur(14px);
 }
 
 .group-modal-card-wide {
@@ -1690,8 +1689,7 @@ button:active,
   display: grid;
   place-items: center;
   padding: 24px;
-  background: rgba(9, 16, 28, 0.22);
-  backdrop-filter: blur(5px);
+  background: rgba(0, 0, 0, 0.45);
 }
 
 .confirmation-dialog {
