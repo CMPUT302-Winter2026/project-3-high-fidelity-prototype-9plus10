@@ -352,17 +352,16 @@ function App() {
   }
 
   function saveActiveWordToGroup(groupId: string): 'saved' | 'already-saved' {
-    setSelectedGroupId(groupId)
+  const targetGroup = groups.find((group) => group.id === groupId)
 
-    const targetGroup = groups.find((group) => group.id === groupId)
-
-    if (!targetGroup || targetGroup.wordIds.includes(activeWord.id)) {
-      return 'already-saved'
-    }
-
-    addWordToGroup(groupId, activeWord.id)
-    return 'saved'
+  if (!targetGroup || targetGroup.wordIds.includes(activeWord.id)) {
+    return 'already-saved'
   }
+
+  setSelectedGroupId(groupId)   // ← only update when actually saving
+  addWordToGroup(groupId, activeWord.id)
+  return 'saved'
+}
 
   function handleCreateGroup() {
     const trimmedName = newGroupName.trim()
@@ -1154,25 +1153,13 @@ function WordDetailPage({
   const saveMessageTimeoutRef = useRef<number | null>(null)
 
   useEffect(() => {
-    if (saveMessageTimeoutRef.current !== null) {
-      window.clearTimeout(saveMessageTimeoutRef.current)
-      saveMessageTimeoutRef.current = null
-    }
-
-    if (groups.length === 0) {
-      setPendingGroupId('')
-      setGroupSaveMessage('')
-      return
-    }
-
-    const nextSelectedGroupId = groups.some((group) => group.id === selectedGroupId)
-      ? selectedGroupId
-      : groups[0].id
-
-    setPendingGroupId(nextSelectedGroupId)
-    setGroupSaveMessage('')
-  }, [groups, selectedGroupId, word.id])
-
+  if (saveMessageTimeoutRef.current !== null) {
+    window.clearTimeout(saveMessageTimeoutRef.current)
+    saveMessageTimeoutRef.current = null
+  }
+  setPendingGroupId('')
+  setGroupSaveMessage('')
+}, [selectedGroupId, word.id])  // ← remove `groups`
   useEffect(() => {
     return () => {
       if (saveMessageTimeoutRef.current !== null) {
@@ -1293,18 +1280,20 @@ function WordDetailPage({
         </div>
         <div className="group-picker-controls">
           <select
-            value={pendingGroupId}
+            value={pendingGroupId ? pendingGroupId : ""}
             onChange={(event) => setPendingGroupId(event.target.value)}
             disabled={groups.length === 0}
+            aria-placeholder='Add to group?'
           >
             {groups.length > 0 ? (
-              groups.map((group) => (
+               
+              [<option value="" disabled >Add to group?</option>].concat(groups.map((group) => (
                 <option key={group.id} value={group.id}>
                   {group.name}
                 </option>
-              ))
+              )))
             ) : (
-              <option value="">No groups available</option>
+              <option disabled>No groups available</option>
             )}
           </select>
           <button
@@ -1855,10 +1844,9 @@ function GroupsPage({
 
           <div className="groups-overview-list">
             {groups.map((group) => (
-              <button
+              <div
                 key={group.id}
-                type="button"
-                className="group-overview-card"
+                className="group-overview-card-div"
                 onClick={() => onOpenGroup(group.id)}
               >
                 <div className="group-overview-copy">
