@@ -1055,7 +1055,7 @@ function MapPage({
         {hoveredConnection ? (
           <div className="map-hover-card" aria-live="polite">
             <div className="map-hover-card-head">
-              <span className="map-hover-kicker">Hovered connection</span>
+              <span className="map-hover-kicker">Connection Link</span>
               <span className={`map-hover-badge map-hover-badge-${hoveredConnection.relationship}`}>
                 {hoveredConnection.relationship === 'hierarchy' ? 'Hierarchy' : 'Related'}
               </span>
@@ -1308,7 +1308,7 @@ function SettingsPage({
       </div>
 
       <div className="settings-card toggle-card">
-        <span>Semantic Gaps</span>
+        <span>Advanced Mode</span>
         <button
           type="button"
           className={`toggle-switch ${semanticGaps ? 'toggle-switch-on' : ''}`}
@@ -1321,7 +1321,7 @@ function SettingsPage({
 
       {semanticGaps ? (
         <div className="settings-card semantic-gap-guide">
-          <strong>Semantic Gaps Guide</strong>
+          <strong>Advanced Relationship Guide Guide</strong>
           <div className="semantic-gap-item">
             <span className="semantic-gap-shape semantic-gap-shape-box" aria-hidden="true" />
             <p>Rounded box: the word exists in both English and Cree.</p>
