@@ -1166,6 +1166,8 @@ function WordDetailPage({
   function wordGroupButtons(){
     return "not implemented"
   }
+
+  const shapeMeaning = semanticGaps ? getNodeShapeMeaning(word) : null
   
   return (
     <>
@@ -1191,7 +1193,6 @@ function WordDetailPage({
 
       <div className="info-panel">
         <strong>{word.type}</strong>
-        {semanticGaps ? <span className="info-subtitle">{getNodeShapeMeaning(word)}</span> : null}
         <p>{word.info}</p>
 
         {relatedWords.length > 0 ? (
@@ -1209,6 +1210,13 @@ function WordDetailPage({
           Cree to English match: <strong>{matchScore}%</strong>
         </p>
       </div>
+
+      {shapeMeaning ? (
+        <div className="detail-shape-card" aria-label="Word availability">
+          <span className="detail-shape-label">Word Availability</span>
+          <p className="detail-shape-copy">{shapeMeaning}</p>
+        </div>
+      ) : null}
 
       <div className="group-picker">
         <div className="group-picker-header">

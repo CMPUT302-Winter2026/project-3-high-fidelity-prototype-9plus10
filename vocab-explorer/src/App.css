@@ -840,6 +840,7 @@ button:active {
 
 .info-panel,
 .settings-card,
+.detail-shape-card,
 .group-summary,
 .group-list-item {
   background: var(--panel-bg);
@@ -869,6 +870,25 @@ button:active {
 
 .info-panel p {
   margin: 0 0 8px;
+  line-height: 1.4;
+}
+
+.detail-shape-card {
+  display: grid;
+  gap: 6px;
+}
+
+.detail-shape-label {
+  color: #7c2f40;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.detail-shape-copy {
+  margin: 0;
+  color: #4e6582;
   line-height: 1.4;
 }
 
