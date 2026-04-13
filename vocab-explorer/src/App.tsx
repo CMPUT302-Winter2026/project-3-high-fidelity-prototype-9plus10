@@ -3,6 +3,7 @@ import './App.css'
 import Wordmap, { type HoveredConnection } from './Wordmap'
 import Corpus, {
   findWordByQuery,
+  getNodeShapeLabel,
   getChildWords,
   getNodeShapeMeaning,
   getParentWords,
@@ -258,6 +259,30 @@ function App() {
     setScreen('help')
   }
 
+  function getLocalizedHelpSection(screen: Screen): HelpSection {
+    if (screen === 'settings') {
+      if (previousScreen === 'help') {
+        return helpSection
+      }
+
+      return getLocalizedHelpSection(previousScreen)
+    }
+
+    switch (screen) {
+      case 'search':
+        return 'web'
+      case 'map':
+      case 'detail':
+        return 'legend'
+      case 'groups':
+        return 'groups'
+      case 'help':
+        return helpSection
+      default:
+        return 'how'
+    }
+  }
+
   function handleToggleSemanticGaps() {
     const nextValue = !semanticGaps
     setSemanticGaps(nextValue)
@@ -507,6 +532,7 @@ function App() {
           <AuthPage
             mode="login"
             onOpenSettings={() => openSettings('login')}
+            onOpenHelp={() => openHelp('login', getLocalizedHelpSection('login'))}
             onPrimaryAction={(email: string) => { setLoggedInEmail(email); setScreen('search') }} // CHANGED: was () => setScreen('search'), now also saves email
             onSwitchMode={() => setScreen('register')}
           />
@@ -516,6 +542,7 @@ function App() {
           <AuthPage
             mode="register"
             onOpenSettings={() => openSettings('register')}
+            onOpenHelp={() => openHelp('register', getLocalizedHelpSection('register'))}
             onPrimaryAction={(email: string) => { setLoggedInEmail(email); setScreen('search') }} // CHANGED: same as above
             onSwitchMode={() => setScreen('login')}
           />
@@ -527,7 +554,7 @@ function App() {
             onSearchValueChange={setSearchValue}
             onSearch={() => openSearchResult(searchValue)}
             onOpenSettings={() => openSettings('search')}
-            onOpenHelp={() => openHelp('search')}
+            onOpenHelp={() => openHelp('search', getLocalizedHelpSection('search'))}
             onOpenGroups={openGroupsOverview}
             onOpenHome={openSearchScreen}
           />
@@ -544,7 +571,7 @@ function App() {
             onSearchValueChange={setSearchValue}
             onSearch={() => openSearchResult(searchValue)}
             onOpenSettings={() => openSettings('map')}
-            onOpenHelp={() => openHelp('map', 'web')}
+            onOpenHelp={() => openHelp('map', getLocalizedHelpSection('map'))}
             onOpenWord={openWordDetail}
             onOpenGroups={openGroupsOverview}
             onOpenHome={openSearchScreen}
@@ -562,6 +589,7 @@ function App() {
             matchScore={matchScores[activeWord.id] ?? 78}
             onBack={() => setScreen('map')}
             onOpenSettings={() => openSettings('detail')}
+            onOpenHelp={() => openHelp('detail', getLocalizedHelpSection('detail'))}
             onSaveWordToGroup={saveActiveWordToGroup}
             onNoteChange={(value) =>
               setNotesByWordId((current) => ({ ...current, [activeWord.id]: value }))
@@ -580,6 +608,8 @@ function App() {
             hierarchyColor={hierarchyColor}
             relatedColor={relatedColor}
             onBack={() => setScreen(previousScreen)}
+            onOpenHelp={() => openHelp('settings', getLocalizedHelpSection('settings'))}
+            onOpenSettings={() => {}}
             // onToggleSemanticGaps={() => setSemanticGaps((current) => !current)}
             onToggleSemanticGaps={handleToggleSemanticGaps}
             onFontSizeChange={setFontSize}
@@ -602,6 +632,8 @@ function App() {
             hierarchyColor={hierarchyColor}
             relatedColor={relatedColor}
             onBack={() => setScreen(helpReturnScreen)}
+            onOpenHelp={() => {}}
+            onOpenSettings={() => openSettings('help')}
             onSelectSection={setHelpSection}
             onReplayBaseTutorial={replayBaseTutorial}
             onReplayWordWebTutorial={replayWordWebTutorial}
@@ -657,6 +689,8 @@ function App() {
             onRequestRemoveWord={requestRemoveWordFromSelectedGroup}
             onGroupNotesChange={updateGroupNotes}
             onRequestDeleteGroup={requestDeleteSelectedGroup}
+            onOpenHelp={() => openHelp('groups', getLocalizedHelpSection('groups'))}
+            onOpenSettings={() => openSettings('groups')}
             onOpenGroups={openGroupsOverview}
             onOpenHome={openSearchScreen}
           />
@@ -749,6 +783,7 @@ type AuthPageProps = {
   onPrimaryAction: (email: string) => void // CHANGED: was () => void, now passes email back to App
   onSwitchMode: () => void
   onOpenSettings: () => void
+  onOpenHelp: () => void
 }
 
 
@@ -781,7 +816,7 @@ function checkUser(email: string, password: string): 'ok' | 'not-found' | 'wrong
 }
 // ---- END ADDED ----
 
-function AuthPage({ mode, onPrimaryAction, onSwitchMode, onOpenSettings }: AuthPageProps) {
+function AuthPage({ mode, onPrimaryAction, onSwitchMode, onOpenSettings, onOpenHelp }: AuthPageProps) {
   const isRegister = mode === 'register'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -826,7 +861,10 @@ function AuthPage({ mode, onPrimaryAction, onSwitchMode, onOpenSettings }: AuthP
   
   return (
     <section className="page auth-page">
-      <div className="top-actions top-actions-single">
+      <div className="top-actions">
+        <CircleIconButton label="Help" onClick={onOpenHelp}>
+          <HelpIcon />
+        </CircleIconButton>
         <CircleIconButton label="Settings" onClick={onOpenSettings}>
           <SettingsIcon />
         </CircleIconButton>
@@ -1054,7 +1092,7 @@ function MapPage({
         {hoveredConnection ? (
           <div className="map-hover-card" aria-live="polite">
             <div className="map-hover-card-head">
-              <span className="map-hover-kicker">Hovered connection</span>
+              <span className="map-hover-kicker">Connection Link</span>
               <span className={`map-hover-badge map-hover-badge-${hoveredConnection.relationship}`}>
                 {hoveredConnection.relationship === 'hierarchy' ? 'Hierarchy' : 'Related'}
               </span>
@@ -1072,7 +1110,7 @@ function MapPage({
       </div>
 
     </section>
-    <FooterNav active="home" onOpenGroups={onOpenGroups} onOpenHome={onOpenHome} />
+    <FooterNav onOpenGroups={onOpenGroups} onOpenHome={onOpenHome} />
   </>
   )
 }
@@ -1087,6 +1125,7 @@ type WordDetailPageProps = {
   matchScore: number
   onBack: () => void
   onOpenSettings: () => void
+  onOpenHelp: () => void
   onSaveWordToGroup: (groupId: string) => 'saved' | 'already-saved'
   onNoteChange: (value: string) => void
   onOpenGroups: () => void
@@ -1103,6 +1142,7 @@ function WordDetailPage({
   matchScore,
   onBack,
   onOpenSettings,
+  onOpenHelp,
   onSaveWordToGroup,
   onNoteChange,
   onOpenGroups,
@@ -1147,7 +1187,7 @@ function WordDetailPage({
     }
 
     const result = onSaveWordToGroup(pendingGroupId)
-    showGroupSaveMessage(result === 'saved' ? 'Saved' : 'Already saved')
+    showGroupSaveMessage(result === 'saved' ? 'Saved to group' : 'Already in group')
   }
 
   function WordGroupButtons(){
@@ -1171,6 +1211,10 @@ function WordDetailPage({
       </>
     )
   }
+
+  const shapeMeaning = semanticGaps ? getNodeShapeMeaning(word) : null
+  const shapeLabel = semanticGaps ? getNodeShapeLabel(word) : null
+  const availabilityCopy = shapeMeaning ? shapeMeaning.replace(/^[^:]+:\s*/, '') : null
   
   return (
     <>
@@ -1180,9 +1224,14 @@ function WordDetailPage({
           <BackIcon />
         </IconButton>
 
-        <CircleIconButton label="Settings" onClick={onOpenSettings}>
-          <SettingsIcon />
-        </CircleIconButton>
+        <div className="page-header-actions">
+          <CircleIconButton label="Help" onClick={onOpenHelp}>
+            <HelpIcon />
+          </CircleIconButton>
+          <CircleIconButton label="Settings" onClick={onOpenSettings}>
+            <SettingsIcon />
+          </CircleIconButton>
+        </div>
       </div>
 
       <div className="chip-row">
@@ -1190,13 +1239,22 @@ function WordDetailPage({
         <WordChip tone="cree" text={getWordLabel(word, 'cree')} />
       </div>
 
+      {shapeMeaning && shapeLabel ? (
+        <div className="detail-shape-card" aria-label="Word availability">
+          <span className={`detail-shape-marker detail-shape-marker-${shapeLabel.toLowerCase().replace(/\s+/g, '-')}`} aria-hidden="true" />
+          <div className="detail-shape-content">
+            <span className="detail-shape-label">Word Availability</span>
+            <p className="detail-shape-copy">{availabilityCopy}</p>
+          </div>
+        </div>
+      ) : null}
+
       <div className="word-art-panel">
         <WordArtwork word={word} />
       </div>
 
       <div className="info-panel">
         <strong>{word.type}</strong>
-        {semanticGaps ? <span className="info-subtitle">{getNodeShapeMeaning(word)}</span> : null}
         <p>{word.info}</p>
 
         {relatedWords.length > 0 ? (
@@ -1214,16 +1272,12 @@ function WordDetailPage({
           Cree to English match: <strong>{matchScore}%</strong>
         </p>
       </div>
-      
+
+      <WordGroupButtons />
       <div className="group-picker">
-        <WordGroupButtons />
-          <span
-            className={`notes-save-confirmation ${groupSaveMessage ? 'notes-save-confirmation-visible' : ''}`}
-            role="status"
-            aria-live="polite"
-          >
-            {groupSaveMessage}
-          </span>
+        <div className="group-picker-header">
+          <span>Add to group?</span>
+        </div>
         <div className="group-picker-controls">
           <select
             value={pendingGroupId ? pendingGroupId : ""}
@@ -1250,6 +1304,13 @@ function WordDetailPage({
           >
             Save Word
           </button>
+          <span
+            className={`notes-save-confirmation ${groupSaveMessage ? 'notes-save-confirmation-visible' : ''}`}
+            role="status"
+            aria-live="polite"
+          >
+            {groupSaveMessage}
+          </span>
         </div>
       </div>
 
@@ -1261,8 +1322,8 @@ function WordDetailPage({
       />
 
     </section>
-    <FooterNav active="home" onOpenGroups={onOpenGroups} onOpenHome={onOpenHome} />
-  </>
+    <FooterNav onOpenGroups={onOpenGroups} onOpenHome={onOpenHome} />
+    </>
   )
 }
 
@@ -1274,6 +1335,8 @@ type SettingsPageProps = {
   hierarchyColor: string
   relatedColor: string
   onBack: () => void
+  onOpenHelp: () => void
+  onOpenSettings: () => void
   onToggleSemanticGaps: () => void
   onFontSizeChange: (value: number) => void
   onSelectContrastColor: (value: string) => void
@@ -1292,6 +1355,8 @@ function SettingsPage({
   hierarchyColor,
   relatedColor,
   onBack,
+  onOpenHelp,
+  onOpenSettings,
   onToggleSemanticGaps,
   onFontSizeChange,
   onSelectContrastColor,
@@ -1310,10 +1375,19 @@ function SettingsPage({
         </IconButton>
 
         <div className="page-title">Settings</div>
+
+        <div className="page-header-actions">
+          <CircleIconButton label="Help" onClick={onOpenHelp}>
+            <HelpIcon />
+          </CircleIconButton>
+          <CircleIconButton label="Settings" onClick={onOpenSettings}>
+            <SettingsIcon />
+          </CircleIconButton>
+        </div>
       </div>
 
       <div className="settings-card toggle-card">
-        <span>Semantic Gaps</span>
+        <span>Advanced Mode</span>
         <button
           type="button"
           className={`toggle-switch ${semanticGaps ? 'toggle-switch-on' : ''}`}
@@ -1326,7 +1400,7 @@ function SettingsPage({
 
       {semanticGaps ? (
         <div className="settings-card semantic-gap-guide">
-          <strong>Semantic Gaps Guide</strong>
+          <strong>Advanced Relationship Guide Guide</strong>
           <div className="semantic-gap-item">
             <span className="semantic-gap-shape semantic-gap-shape-box" aria-hidden="true" />
             <p>Rounded box: the word exists in both English and Cree.</p>
@@ -1453,7 +1527,7 @@ function SettingsPage({
       )}
 
     </section>
-    <FooterNav active="home" onOpenGroups={onOpenGroups} onOpenHome={onOpenHome} />
+    <FooterNav onOpenGroups={onOpenGroups} onOpenHome={onOpenHome} />
     </>
   )
 }
@@ -1464,6 +1538,8 @@ type HelpPageProps = {
   hierarchyColor: string
   relatedColor: string
   onBack: () => void
+  onOpenHelp: () => void
+  onOpenSettings: () => void
   onSelectSection: (section: HelpSection) => void
   onReplayBaseTutorial: () => void
   onReplayWordWebTutorial: () => void
@@ -1481,6 +1557,8 @@ function HelpPage({
   hierarchyColor,
   relatedColor,
   onBack,
+  onOpenHelp,
+  onOpenSettings,
   onSelectSection,
   onReplayBaseTutorial,
   onReplayWordWebTutorial,
@@ -1508,6 +1586,15 @@ function HelpPage({
         </IconButton>
 
         <div className="page-title">Help</div>
+
+        <div className="page-header-actions">
+          <CircleIconButton label="Help" onClick={onOpenHelp}>
+            <HelpIcon />
+          </CircleIconButton>
+          <CircleIconButton label="Settings" onClick={onOpenSettings}>
+            <SettingsIcon />
+          </CircleIconButton>
+        </div>
       </div>
 
       <div className="help-tab-grid">
@@ -1653,7 +1740,7 @@ function HelpPage({
       </div>
 
     </section>
-    <FooterNav active="home" onOpenGroups={onOpenGroups} onOpenHome={onOpenHome} />
+    <FooterNav onOpenGroups={onOpenGroups} onOpenHome={onOpenHome} />
     </>
   )
 }
@@ -1684,6 +1771,8 @@ type GroupsPageProps = {
   onRequestRemoveWord: (word: Word) => void
   onGroupNotesChange: (value: string) => void
   onRequestDeleteGroup: () => void
+  onOpenHelp: () => void
+  onOpenSettings: () => void
   onOpenGroups: () => void
   onOpenHome: () => void
 }
@@ -1714,6 +1803,8 @@ function GroupsPage({
   onRequestRemoveWord,
   onGroupNotesChange,
   onRequestDeleteGroup,
+  onOpenHelp,
+  onOpenSettings,
   onOpenGroups,
   onOpenHome,
 }: GroupsPageProps) {
@@ -1740,23 +1831,38 @@ function GroupsPage({
                 <SearchIcon />
               </button>
             </form>
+
+            <div className="page-header-actions">
+              <CircleIconButton label="Help" onClick={onOpenHelp}>
+                <HelpIcon />
+              </CircleIconButton>
+              <CircleIconButton label="Settings" onClick={onOpenSettings}>
+                <SettingsIcon />
+              </CircleIconButton>
+            </div>
           </div>
 
           <div className="groups-overview-list">
             {groups.map((group) => (
-              <div
+              <button
                 key={group.id}
+                type="button"
                 className="group-overview-card-div"
                 onClick={() => onOpenGroup(group.id)}
               >
-              <div className='group-title-and-count'>
-                <div className="group-name-row">
-                  {group.name}
+                <div className="group-overview-copy">
+                  <span className="group-overview-title">{group.name}</span>
+                  <div className="group-overview-note-box">
+                    <span className="group-overview-note-label">Notes</span>
+                    <span className="group-overview-notes">
+                      {group.notes.trim() || 'No notes yet for this group.'}
+                    </span>
+                  </div>
                 </div>
-              <div className='word-count-div'> ├ {group.wordIds.length} ┤</div>
-              </div>
-                <div className="group-notes-preview">{group.notes}</div>
-              </div>
+                <span className="group-overview-count" aria-label={`${group.wordIds.length} words`}>
+                  {group.wordIds.length}
+                </span>
+              </button>
             ))}
           </div>
 
@@ -1773,6 +1879,15 @@ function GroupsPage({
 
             <div className="page-title
   ">{selectedGroup.name}</div>
+
+            <div className="page-header-actions">
+              <CircleIconButton label="Help" onClick={onOpenHelp}>
+                <HelpIcon />
+              </CircleIconButton>
+              <CircleIconButton label="Settings" onClick={onOpenSettings}>
+                <SettingsIcon />
+              </CircleIconButton>
+            </div>
           </div>
 
           <div className="group-detail-list">
@@ -1875,7 +1990,7 @@ function GroupsPage({
       ) : null}
 
     </section>
-    <FooterNav active="home" onOpenGroups={onOpenGroups} onOpenHome={onOpenHome} />
+    <FooterNav active="groups" onOpenGroups={onOpenGroups} onOpenHome={onOpenHome} />
     </>
     )
 }
@@ -1927,8 +2042,7 @@ function NotesEditor({ className, value, onChange, placeholder }: NotesEditorPro
     }
   }, [])
 
-  function handleChange(nextValue: string) {
-    onChange(nextValue)
+  function showSavedFeedback() {
     setShowSavedNotice(true)
 
     if (saveNoticeTimeoutRef.current !== null) {
@@ -1941,8 +2055,18 @@ function NotesEditor({ className, value, onChange, placeholder }: NotesEditorPro
     }, 1600)
   }
 
+  function handleChange(nextValue: string) {
+    onChange(nextValue)
+    showSavedFeedback()
+  }
+
+  function handleExplicitSave() {
+    onChange(value)
+    showSavedFeedback()
+  }
+
   return (
-    <label className={`${className} notes-editor`}>
+    <div className={`${className} notes-editor`}>
       <div className="notes-editor-header">
         <span className="notes-editor-label">Notes:</span>
         <span
@@ -1958,7 +2082,12 @@ function NotesEditor({ className, value, onChange, placeholder }: NotesEditorPro
         onChange={(event) => handleChange(event.target.value)}
         placeholder={placeholder}
       />
-    </label>
+      <div className="notes-editor-footer">
+        <button type="button" className="notes-explicit-save-button" onClick={handleExplicitSave}>
+          Save
+        </button>
+      </div>
+    </div>
   )
 }
 
