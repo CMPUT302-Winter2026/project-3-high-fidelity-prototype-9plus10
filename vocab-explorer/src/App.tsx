@@ -1995,7 +1995,7 @@ function GroupsPage({
       ) : null}
 
     </section>
-    <FooterNav active="home" onOpenGroups={onOpenGroups} onOpenHome={onOpenHome} />
+    <FooterNav active="groups" onOpenGroups={onOpenGroups} onOpenHome={onOpenHome} />
     </>
     )
 }
