@@ -1163,8 +1163,26 @@ function WordDetailPage({
     showGroupSaveMessage(result === 'saved' ? 'Saved' : 'Already saved')
   }
 
-  function wordGroupButtons(){
-    return "not implemented"
+  function WordGroupButtons(){
+    var groupsWithWord = groups.filter(
+      (group) => {
+        return group.wordIds.includes(word.id)
+      })
+
+
+    const listItems = groupsWithWord.map(group=> <li><button key={group.id}
+                type="button"
+                className="group-overview-card"
+                onClick={() => onOpenGroups(group.id)}>{group.name}</button></li>);
+    return (
+      <>
+        <section className='group-picker-div'>
+          <ul className='group-picker-word-details'>
+            {listItems}
+          </ul>
+        </section>
+      </>
+    )
   }
 
   const shapeMeaning = semanticGaps ? getNodeShapeMeaning(word) : null
@@ -1218,6 +1236,7 @@ function WordDetailPage({
         </div>
       ) : null}
 
+      <WordGroupButtons />
       <div className="group-picker">
         <div className="group-picker-header">
           <span>Add to group?</span>
@@ -1775,10 +1794,8 @@ function GroupsPage({
 
           <div className="group-detail-list">
             {groupWords.map((word) => (
-              <div key={word.id} className="group-word-row">
-                <button type="button" className="group-word-open" onClick={() => onOpenWord(word.id)}>
-                  {getWordLabel(word)}
-                </button>
+              <div key={word.id} className="group-word-row"  onClick={() => onOpenWord(word.id)}>
+                {getWordLabel(word)}
                 <button
                   type="button"
                   className="group-remove-button"
