@@ -878,13 +878,18 @@ button:active,
 }
 
 .detail-shape-card {
-  display: grid;
-  gap: 6px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f4e7a5;
+  border: 2px solid #d9c779;
+  border-radius: 20px;
+  padding: 9px 12px;
 }
 
 .detail-shape-label {
-  color: #7c2f40;
-  font-size: 0.82rem;
+  color: #8a5a2c;
+  font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -892,8 +897,40 @@ button:active,
 
 .detail-shape-copy {
   margin: 0;
-  color: #4e6582;
-  line-height: 1.4;
+  color: #3d2f1f;
+  font-size: 0.95rem;
+  line-height: 1.22;
+}
+
+.detail-shape-content {
+  display: grid;
+  gap: 4px;
+}
+
+.detail-shape-marker {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 18px;
+  border: 3px solid #b25fc8;
+  background: #efe5ff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.detail-shape-marker-rounded-box {
+  border-radius: 8px;
+}
+
+.detail-shape-marker-diamond {
+  width: 20px;
+  height: 20px;
+  transform: rotate(45deg);
+  border-radius: 5px;
+}
+
+.detail-shape-marker-circle {
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
 }
 
 .info-label {

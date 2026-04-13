@@ -3,6 +3,7 @@ import './App.css'
 import Wordmap, { type HoveredConnection } from './Wordmap'
 import Corpus, {
   findWordByQuery,
+  getNodeShapeLabel,
   getChildWords,
   getNodeShapeMeaning,
   getParentWords,
@@ -1199,7 +1200,7 @@ function WordDetailPage({
     }
 
     const result = onSaveWordToGroup(pendingGroupId)
-    showGroupSaveMessage(result === 'saved' ? 'Saved' : 'Already saved')
+    showGroupSaveMessage(result === 'saved' ? 'Saved to group' : 'Already in group')
   }
 
   function WordGroupButtons(){
@@ -1225,6 +1226,8 @@ function WordDetailPage({
   }
 
   const shapeMeaning = semanticGaps ? getNodeShapeMeaning(word) : null
+  const shapeLabel = semanticGaps ? getNodeShapeLabel(word) : null
+  const availabilityCopy = shapeMeaning ? shapeMeaning.replace(/^[^:]+:\s*/, '') : null
   
   return (
     <>
@@ -1248,6 +1251,16 @@ function WordDetailPage({
         <WordChip tone="english" text={getWordLabel(word, 'english')} />
         <WordChip tone="cree" text={getWordLabel(word, 'cree')} />
       </div>
+
+      {shapeMeaning && shapeLabel ? (
+        <div className="detail-shape-card" aria-label="Word availability">
+          <span className={`detail-shape-marker detail-shape-marker-${shapeLabel.toLowerCase().replace(/\s+/g, '-')}`} aria-hidden="true" />
+          <div className="detail-shape-content">
+            <span className="detail-shape-label">Word Availability</span>
+            <p className="detail-shape-copy">{availabilityCopy}</p>
+          </div>
+        </div>
+      ) : null}
 
       <div className="word-art-panel">
         <WordArtwork word={word} />
@@ -1273,24 +1286,10 @@ function WordDetailPage({
         </p>
       </div>
 
-      {shapeMeaning ? (
-        <div className="detail-shape-card" aria-label="Word availability">
-          <span className="detail-shape-label">Word Availability</span>
-          <p className="detail-shape-copy">{shapeMeaning}</p>
-        </div>
-      ) : null}
-
       <WordGroupButtons />
       <div className="group-picker">
         <div className="group-picker-header">
           <span>Add to group?</span>
-          <span
-            className={`notes-save-confirmation ${groupSaveMessage ? 'notes-save-confirmation-visible' : ''}`}
-            role="status"
-            aria-live="polite"
-          >
-            {groupSaveMessage}
-          </span>
         </div>
         <div className="group-picker-controls">
           <select
@@ -1316,6 +1315,13 @@ function WordDetailPage({
           >
             Save Word
           </button>
+          <span
+            className={`notes-save-confirmation ${groupSaveMessage ? 'notes-save-confirmation-visible' : ''}`}
+            role="status"
+            aria-live="polite"
+          >
+            {groupSaveMessage}
+          </span>
         </div>
       </div>
 
