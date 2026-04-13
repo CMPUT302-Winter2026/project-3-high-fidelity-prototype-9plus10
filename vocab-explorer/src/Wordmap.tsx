@@ -274,6 +274,11 @@ export default function Wordmap({
           cy.maxZoom(2.4)
           cy.autoungrabify(false)
 
+          cy.on('layoutstop', () => {
+            syncMapViewport(cy, focusWord.id)
+            saveMapViewport(cy, viewKey)
+          })
+
           cy.on('tap', 'node', (event) => {
             const selectedId = event.target.data('wordId') as string | undefined
 

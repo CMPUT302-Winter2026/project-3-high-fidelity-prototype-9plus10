@@ -1448,7 +1448,8 @@ button:active,
   cursor: pointer;
 }
 
-.group-overview-card {
+.group-overview-card,
+.group-overview-card-div {
   position: relative;
   display: block;
   text-align: left;

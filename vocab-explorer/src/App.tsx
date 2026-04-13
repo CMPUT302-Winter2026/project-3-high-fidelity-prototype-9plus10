@@ -1844,8 +1844,9 @@ function GroupsPage({
 
           <div className="groups-overview-list">
             {groups.map((group) => (
-              <div
+              <button
                 key={group.id}
+                type="button"
                 className="group-overview-card-div"
                 onClick={() => onOpenGroup(group.id)}
               >
