@@ -1111,7 +1111,7 @@ function MapPage({
       </div>
 
     </section>
-    <FooterNav active="home" onOpenGroups={onOpenGroups} onOpenHome={onOpenHome} />
+    <FooterNav onOpenGroups={onOpenGroups} onOpenHome={onOpenHome} />
   </>
   )
 }
@@ -1333,8 +1333,8 @@ function WordDetailPage({
       />
 
     </section>
-    <FooterNav active="home" onOpenGroups={onOpenGroups} onOpenHome={onOpenHome} />
-  </>
+    <FooterNav onOpenGroups={onOpenGroups} onOpenHome={onOpenHome} />
+    </>
   )
 }
 
@@ -1538,7 +1538,7 @@ function SettingsPage({
       )}
 
     </section>
-    <FooterNav active="home" onOpenGroups={onOpenGroups} onOpenHome={onOpenHome} />
+    <FooterNav onOpenGroups={onOpenGroups} onOpenHome={onOpenHome} />
     </>
   )
 }
@@ -1751,7 +1751,7 @@ function HelpPage({
       </div>
 
     </section>
-    <FooterNav active="home" onOpenGroups={onOpenGroups} onOpenHome={onOpenHome} />
+    <FooterNav onOpenGroups={onOpenGroups} onOpenHome={onOpenHome} />
     </>
   )
 }

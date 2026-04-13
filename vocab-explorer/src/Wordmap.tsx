@@ -253,14 +253,18 @@ export default function Wordmap({
         key={viewKey}
         elements={elements}
         layout={{ name: 'cola',
-                  infinite: true,
+                  infinite: false,
                   animate: true,
                   refresh: 1,
                   fit: false,
-                  padding: 18,
-                  // edgeLength: 120,
+                  padding: 20,
+                  edgeLength: 165,
                   avoidOverlap: true,
-                  nodeSpacing: 40,
+                  nodeSpacing: 60,
+                  flow: {
+                    axis: 'y',
+                    minSeparation: 92,
+                  },
                 } as cytoscape.LayoutOptions}
         stylesheet={mapStylesheet}
         cy={(cy: Core) => {
@@ -326,12 +330,11 @@ function createMapStylesheet({
       selector: 'node',
       style: {
         label: 'data(label)',
-        // width: 108,
-        // height: 60,
         width: "label",
         height: "label",
-        "min-width": "99px",
-        padding: '7px',
+        "min-width": "62px",
+        "min-height": "54px",
+        padding: '9px',
         shape: 'round-rectangle',
         'background-color': '#ccb8eb',
         color: '#101422',
@@ -342,8 +345,8 @@ function createMapStylesheet({
         'text-wrap': 'wrap',
         'border-width': 3,
         'border-color': '#9e80cb',
-        'text-max-width': '98px',
-        'line-height': 1,
+        'text-max-width': '64px',
+        'line-height': 1.12,
         'text-outline-width': 0,
       },
     },
@@ -353,7 +356,7 @@ function createMapStylesheet({
         'background-color': '#cdb8ee',
         'border-color': '#8a6bc8',
         'border-width': 5,
-        'padding': '5px'
+        'padding': '10px'
       },
     },
     {
@@ -375,7 +378,7 @@ function createMapStylesheet({
         'background-color': '#dea1c4',
         'border-color': '#b96596',
         'font-size': 11,
-        'text-max-width': '82px',
+        'text-max-width': '94px',
       },
     },
     {
@@ -383,11 +386,13 @@ function createMapStylesheet({
       style: {
         width: "label",
         height: "label",
-        padding: '12px',
+        "min-width": "74px",
+        "min-height": "62px",
+        padding: '11px',
         'border-width': 5,
         'font-size': 14,
         'font-weight': 700,
-        'text-max-width': '124px',
+        'text-max-width': '76px',
       },
     },
     {
@@ -412,13 +417,14 @@ function createMapStylesheet({
     {
       selector: 'edge',
       style: {
-        width: 5,
+        width: 4,
         'line-color': 'rgba(214, 220, 227, 0.54)',
         'target-arrow-shape': 'triangle',
         'target-arrow-color': 'rgba(214, 220, 227, 0.54)',
         'arrow-scale': 1.25,
         opacity: 0.7,
-        'curve-style': 'straight',
+        'curve-style': 'bezier',
+        'control-point-step-size': 60,
       },
     },
     {
@@ -433,6 +439,9 @@ function createMapStylesheet({
       selector: 'edge[relationship = "related"]',
       style: {
         'line-color': relatedColor,
+        'curve-style': 'unbundled-bezier',
+        'control-point-distance': 72,
+        'control-point-weight': 0.42,
         'target-arrow-shape': 'none',
         'target-arrow-color': relatedColor,
         'line-style': 'dashed',
