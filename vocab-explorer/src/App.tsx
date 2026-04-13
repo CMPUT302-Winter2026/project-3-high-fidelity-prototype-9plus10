@@ -1772,7 +1772,15 @@ function GroupsPage({
                 className="group-overview-card"
                 onClick={() => onOpenGroup(group.id)}
               >
-                {group.name} [{group.wordIds.length}]
+                <div className="group-overview-copy">
+                  <span className="group-overview-title">{group.name}</span>
+                  <span className="group-overview-notes">
+                    {group.notes.trim() || 'No notes yet for this group.'}
+                  </span>
+                </div>
+                <span className="group-overview-count" aria-label={`${group.wordIds.length} words`}>
+                  {group.wordIds.length}
+                </span>
               </button>
             ))}
           </div>
