@@ -258,7 +258,7 @@ export default function Wordmap({
                   refresh: 1,
                   fit: false,
                   padding: 20,
-                  edgeLength: 165,
+                  edgeLength: 140,
                   avoidOverlap: true,
                   nodeSpacing: 60,
                   flow: {
