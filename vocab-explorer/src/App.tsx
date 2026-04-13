@@ -258,6 +258,30 @@ function App() {
     setScreen('help')
   }
 
+  function getLocalizedHelpSection(screen: Screen): HelpSection {
+    if (screen === 'settings') {
+      if (previousScreen === 'help') {
+        return helpSection
+      }
+
+      return getLocalizedHelpSection(previousScreen)
+    }
+
+    switch (screen) {
+      case 'search':
+        return 'web'
+      case 'map':
+      case 'detail':
+        return 'legend'
+      case 'groups':
+        return 'groups'
+      case 'help':
+        return helpSection
+      default:
+        return 'how'
+    }
+  }
+
   function handleToggleSemanticGaps() {
     const nextValue = !semanticGaps
     setSemanticGaps(nextValue)
@@ -508,7 +532,7 @@ function App() {
           <AuthPage
             mode="login"
             onOpenSettings={() => openSettings('login')}
-            onOpenHelp={() => openHelp('login')}
+            onOpenHelp={() => openHelp('login', getLocalizedHelpSection('login'))}
             onPrimaryAction={(email: string) => { setLoggedInEmail(email); setScreen('search') }} // CHANGED: was () => setScreen('search'), now also saves email
             onSwitchMode={() => setScreen('register')}
           />
@@ -518,7 +542,7 @@ function App() {
           <AuthPage
             mode="register"
             onOpenSettings={() => openSettings('register')}
-            onOpenHelp={() => openHelp('register')}
+            onOpenHelp={() => openHelp('register', getLocalizedHelpSection('register'))}
             onPrimaryAction={(email: string) => { setLoggedInEmail(email); setScreen('search') }} // CHANGED: same as above
             onSwitchMode={() => setScreen('login')}
           />
@@ -530,7 +554,7 @@ function App() {
             onSearchValueChange={setSearchValue}
             onSearch={() => openSearchResult(searchValue)}
             onOpenSettings={() => openSettings('search')}
-            onOpenHelp={() => openHelp('search')}
+            onOpenHelp={() => openHelp('search', getLocalizedHelpSection('search'))}
             onOpenGroups={openGroupsOverview}
             onOpenHome={openSearchScreen}
           />
@@ -547,7 +571,7 @@ function App() {
             onSearchValueChange={setSearchValue}
             onSearch={() => openSearchResult(searchValue)}
             onOpenSettings={() => openSettings('map')}
-            onOpenHelp={() => openHelp('map', 'web')}
+            onOpenHelp={() => openHelp('map', getLocalizedHelpSection('map'))}
             onOpenWord={openWordDetail}
             onOpenGroups={openGroupsOverview}
             onOpenHome={openSearchScreen}
@@ -565,7 +589,7 @@ function App() {
             matchScore={matchScores[activeWord.id] ?? 78}
             onBack={() => setScreen('map')}
             onOpenSettings={() => openSettings('detail')}
-            onOpenHelp={() => openHelp('detail')}
+            onOpenHelp={() => openHelp('detail', getLocalizedHelpSection('detail'))}
             onSaveWordToGroup={saveActiveWordToGroup}
             onNoteChange={(value) =>
               setNotesByWordId((current) => ({ ...current, [activeWord.id]: value }))
@@ -584,7 +608,7 @@ function App() {
             hierarchyColor={hierarchyColor}
             relatedColor={relatedColor}
             onBack={() => setScreen(previousScreen)}
-            onOpenHelp={() => openHelp('settings')}
+            onOpenHelp={() => openHelp('settings', getLocalizedHelpSection('settings'))}
             onOpenSettings={() => {}}
             // onToggleSemanticGaps={() => setSemanticGaps((current) => !current)}
             onToggleSemanticGaps={handleToggleSemanticGaps}
@@ -665,7 +689,7 @@ function App() {
             onRequestRemoveWord={requestRemoveWordFromSelectedGroup}
             onGroupNotesChange={updateGroupNotes}
             onRequestDeleteGroup={requestDeleteSelectedGroup}
-            onOpenHelp={() => openHelp('groups', 'groups')}
+            onOpenHelp={() => openHelp('groups', getLocalizedHelpSection('groups'))}
             onOpenSettings={() => openSettings('groups')}
             onOpenGroups={openGroupsOverview}
             onOpenHome={openSearchScreen}
