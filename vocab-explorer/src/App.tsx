@@ -1955,8 +1955,7 @@ function NotesEditor({ className, value, onChange, placeholder }: NotesEditorPro
     }
   }, [])
 
-  function handleChange(nextValue: string) {
-    onChange(nextValue)
+  function showSavedFeedback() {
     setShowSavedNotice(true)
 
     if (saveNoticeTimeoutRef.current !== null) {
@@ -1969,8 +1968,18 @@ function NotesEditor({ className, value, onChange, placeholder }: NotesEditorPro
     }, 1600)
   }
 
+  function handleChange(nextValue: string) {
+    onChange(nextValue)
+    showSavedFeedback()
+  }
+
+  function handleExplicitSave() {
+    onChange(value)
+    showSavedFeedback()
+  }
+
   return (
-    <label className={`${className} notes-editor`}>
+    <div className={`${className} notes-editor`}>
       <div className="notes-editor-header">
         <span className="notes-editor-label">Notes:</span>
         <span
@@ -1986,7 +1995,12 @@ function NotesEditor({ className, value, onChange, placeholder }: NotesEditorPro
         onChange={(event) => handleChange(event.target.value)}
         placeholder={placeholder}
       />
-    </label>
+      <div className="notes-editor-footer">
+        <button type="button" className="notes-explicit-save-button" onClick={handleExplicitSave}>
+          Save
+        </button>
+      </div>
+    </div>
   )
 }
 
