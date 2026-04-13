@@ -1774,9 +1774,12 @@ function GroupsPage({
               >
                 <div className="group-overview-copy">
                   <span className="group-overview-title">{group.name}</span>
-                  <span className="group-overview-notes">
-                    {group.notes.trim() || 'No notes yet for this group.'}
-                  </span>
+                  <div className="group-overview-note-box">
+                    <span className="group-overview-note-label">Notes</span>
+                    <span className="group-overview-notes">
+                      {group.notes.trim() || 'No notes yet for this group.'}
+                    </span>
+                  </div>
                 </div>
                 <span className="group-overview-count" aria-label={`${group.wordIds.length} words`}>
                   {group.wordIds.length}
