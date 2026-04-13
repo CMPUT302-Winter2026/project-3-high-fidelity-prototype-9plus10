@@ -508,6 +508,7 @@ function App() {
           <AuthPage
             mode="login"
             onOpenSettings={() => openSettings('login')}
+            onOpenHelp={() => openHelp('login')}
             onPrimaryAction={(email: string) => { setLoggedInEmail(email); setScreen('search') }} // CHANGED: was () => setScreen('search'), now also saves email
             onSwitchMode={() => setScreen('register')}
           />
@@ -517,6 +518,7 @@ function App() {
           <AuthPage
             mode="register"
             onOpenSettings={() => openSettings('register')}
+            onOpenHelp={() => openHelp('register')}
             onPrimaryAction={(email: string) => { setLoggedInEmail(email); setScreen('search') }} // CHANGED: same as above
             onSwitchMode={() => setScreen('login')}
           />
@@ -563,6 +565,7 @@ function App() {
             matchScore={matchScores[activeWord.id] ?? 78}
             onBack={() => setScreen('map')}
             onOpenSettings={() => openSettings('detail')}
+            onOpenHelp={() => openHelp('detail')}
             onSaveWordToGroup={saveActiveWordToGroup}
             onNoteChange={(value) =>
               setNotesByWordId((current) => ({ ...current, [activeWord.id]: value }))
@@ -581,6 +584,8 @@ function App() {
             hierarchyColor={hierarchyColor}
             relatedColor={relatedColor}
             onBack={() => setScreen(previousScreen)}
+            onOpenHelp={() => openHelp('settings')}
+            onOpenSettings={() => {}}
             // onToggleSemanticGaps={() => setSemanticGaps((current) => !current)}
             onToggleSemanticGaps={handleToggleSemanticGaps}
             onFontSizeChange={setFontSize}
@@ -603,6 +608,8 @@ function App() {
             hierarchyColor={hierarchyColor}
             relatedColor={relatedColor}
             onBack={() => setScreen(helpReturnScreen)}
+            onOpenHelp={() => {}}
+            onOpenSettings={() => openSettings('help')}
             onSelectSection={setHelpSection}
             onReplayBaseTutorial={replayBaseTutorial}
             onReplayWordWebTutorial={replayWordWebTutorial}
@@ -658,6 +665,8 @@ function App() {
             onRequestRemoveWord={requestRemoveWordFromSelectedGroup}
             onGroupNotesChange={updateGroupNotes}
             onRequestDeleteGroup={requestDeleteSelectedGroup}
+            onOpenHelp={() => openHelp('groups', 'groups')}
+            onOpenSettings={() => openSettings('groups')}
             onOpenGroups={openGroupsOverview}
             onOpenHome={openSearchScreen}
           />
@@ -750,6 +759,7 @@ type AuthPageProps = {
   onPrimaryAction: (email: string) => void // CHANGED: was () => void, now passes email back to App
   onSwitchMode: () => void
   onOpenSettings: () => void
+  onOpenHelp: () => void
 }
 
 
@@ -782,7 +792,7 @@ function checkUser(email: string, password: string): 'ok' | 'not-found' | 'wrong
 }
 // ---- END ADDED ----
 
-function AuthPage({ mode, onPrimaryAction, onSwitchMode, onOpenSettings }: AuthPageProps) {
+function AuthPage({ mode, onPrimaryAction, onSwitchMode, onOpenSettings, onOpenHelp }: AuthPageProps) {
   const isRegister = mode === 'register'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -827,7 +837,10 @@ function AuthPage({ mode, onPrimaryAction, onSwitchMode, onOpenSettings }: AuthP
   
   return (
     <section className="page auth-page">
-      <div className="top-actions top-actions-single">
+      <div className="top-actions">
+        <CircleIconButton label="Help" onClick={onOpenHelp}>
+          <HelpIcon />
+        </CircleIconButton>
         <CircleIconButton label="Settings" onClick={onOpenSettings}>
           <SettingsIcon />
         </CircleIconButton>
@@ -1088,6 +1101,7 @@ type WordDetailPageProps = {
   matchScore: number
   onBack: () => void
   onOpenSettings: () => void
+  onOpenHelp: () => void
   onSaveWordToGroup: (groupId: string) => 'saved' | 'already-saved'
   onNoteChange: (value: string) => void
   onOpenGroups: () => void
@@ -1104,6 +1118,7 @@ function WordDetailPage({
   matchScore,
   onBack,
   onOpenSettings,
+  onOpenHelp,
   onSaveWordToGroup,
   onNoteChange,
   onOpenGroups,
@@ -1195,9 +1210,14 @@ function WordDetailPage({
           <BackIcon />
         </IconButton>
 
-        <CircleIconButton label="Settings" onClick={onOpenSettings}>
-          <SettingsIcon />
-        </CircleIconButton>
+        <div className="page-header-actions">
+          <CircleIconButton label="Help" onClick={onOpenHelp}>
+            <HelpIcon />
+          </CircleIconButton>
+          <CircleIconButton label="Settings" onClick={onOpenSettings}>
+            <SettingsIcon />
+          </CircleIconButton>
+        </div>
       </div>
 
       <div className="chip-row">
@@ -1296,6 +1316,8 @@ type SettingsPageProps = {
   hierarchyColor: string
   relatedColor: string
   onBack: () => void
+  onOpenHelp: () => void
+  onOpenSettings: () => void
   onToggleSemanticGaps: () => void
   onFontSizeChange: (value: number) => void
   onSelectContrastColor: (value: string) => void
@@ -1314,6 +1336,8 @@ function SettingsPage({
   hierarchyColor,
   relatedColor,
   onBack,
+  onOpenHelp,
+  onOpenSettings,
   onToggleSemanticGaps,
   onFontSizeChange,
   onSelectContrastColor,
@@ -1332,6 +1356,15 @@ function SettingsPage({
         </IconButton>
 
         <div className="page-title">Settings</div>
+
+        <div className="page-header-actions">
+          <CircleIconButton label="Help" onClick={onOpenHelp}>
+            <HelpIcon />
+          </CircleIconButton>
+          <CircleIconButton label="Settings" onClick={onOpenSettings}>
+            <SettingsIcon />
+          </CircleIconButton>
+        </div>
       </div>
 
       <div className="settings-card toggle-card">
@@ -1486,6 +1519,8 @@ type HelpPageProps = {
   hierarchyColor: string
   relatedColor: string
   onBack: () => void
+  onOpenHelp: () => void
+  onOpenSettings: () => void
   onSelectSection: (section: HelpSection) => void
   onReplayBaseTutorial: () => void
   onReplayWordWebTutorial: () => void
@@ -1503,6 +1538,8 @@ function HelpPage({
   hierarchyColor,
   relatedColor,
   onBack,
+  onOpenHelp,
+  onOpenSettings,
   onSelectSection,
   onReplayBaseTutorial,
   onReplayWordWebTutorial,
@@ -1530,6 +1567,15 @@ function HelpPage({
         </IconButton>
 
         <div className="page-title">Help</div>
+
+        <div className="page-header-actions">
+          <CircleIconButton label="Help" onClick={onOpenHelp}>
+            <HelpIcon />
+          </CircleIconButton>
+          <CircleIconButton label="Settings" onClick={onOpenSettings}>
+            <SettingsIcon />
+          </CircleIconButton>
+        </div>
       </div>
 
       <div className="help-tab-grid">
@@ -1706,6 +1752,8 @@ type GroupsPageProps = {
   onRequestRemoveWord: (word: Word) => void
   onGroupNotesChange: (value: string) => void
   onRequestDeleteGroup: () => void
+  onOpenHelp: () => void
+  onOpenSettings: () => void
   onOpenGroups: () => void
   onOpenHome: () => void
 }
@@ -1736,6 +1784,8 @@ function GroupsPage({
   onRequestRemoveWord,
   onGroupNotesChange,
   onRequestDeleteGroup,
+  onOpenHelp,
+  onOpenSettings,
   onOpenGroups,
   onOpenHome,
 }: GroupsPageProps) {
@@ -1762,6 +1812,15 @@ function GroupsPage({
                 <SearchIcon />
               </button>
             </form>
+
+            <div className="page-header-actions">
+              <CircleIconButton label="Help" onClick={onOpenHelp}>
+                <HelpIcon />
+              </CircleIconButton>
+              <CircleIconButton label="Settings" onClick={onOpenSettings}>
+                <SettingsIcon />
+              </CircleIconButton>
+            </div>
           </div>
 
           <div className="groups-overview-list">
@@ -1801,6 +1860,15 @@ function GroupsPage({
 
             <div className="page-title
   ">{selectedGroup.name}</div>
+
+            <div className="page-header-actions">
+              <CircleIconButton label="Help" onClick={onOpenHelp}>
+                <HelpIcon />
+              </CircleIconButton>
+              <CircleIconButton label="Settings" onClick={onOpenSettings}>
+                <SettingsIcon />
+              </CircleIconButton>
+            </div>
           </div>
 
           <div className="group-detail-list">

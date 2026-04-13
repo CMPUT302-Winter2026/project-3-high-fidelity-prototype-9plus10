@@ -612,14 +612,15 @@ button:active,
   left: 14px;
   right: 14px;
   z-index: 2;
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
+  display: grid;
+  justify-items: stretch;
+  gap: 12px;
 }
 
 .map-search-form {
   position: relative;
-  flex: 1;
+  width: 100%;
+  grid-row: 2;
 }
 
 .map-search-form input {
@@ -628,7 +629,8 @@ button:active,
 }
 
 .map-header-actions {
-  flex: 0 0 auto;
+  grid-row: 1;
+  justify-self: end;
 }
 
 .map-title-card {
@@ -1352,14 +1354,23 @@ button:active,
 }
 
 .groups-top-bar {
-  display: flex;
-  align-items: center;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: start;
   gap: 12px;
 }
 
 .groups-search-form {
   position: relative;
-  flex: 1;
+  width: 100%;
+  grid-column: 1 / -1;
+  grid-row: 2;
+}
+
+.groups-top-bar .page-header-actions {
+  grid-column: 3;
+  grid-row: 1;
+  justify-self: end;
 }
 
 .group-word-row {
