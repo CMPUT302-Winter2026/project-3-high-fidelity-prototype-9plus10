@@ -1291,6 +1291,14 @@ function WordDetailPage({
           <span>Add to group?</span>
         </div>
         <div className="group-picker-controls">
+        <span
+          className={`notes-save-confirmation ${groupSaveMessage ? 'notes-save-confirmation-visible' : ''}`}
+          role="status"
+          aria-live="polite"
+        >
+          {groupSaveMessage}
+        </span>
+        <div className="group-picker-controls-row">  
           <select
             value={pendingGroupId ? pendingGroupId : ""}
             onChange={(event) => setPendingGroupId(event.target.value)}
@@ -1316,13 +1324,7 @@ function WordDetailPage({
           >
             Save Word
           </button>
-          <span
-            className={`notes-save-confirmation ${groupSaveMessage ? 'notes-save-confirmation-visible' : ''}`}
-            role="status"
-            aria-live="polite"
-          >
-            {groupSaveMessage}
-          </span>
+          </div>
         </div>
       </div>
 
