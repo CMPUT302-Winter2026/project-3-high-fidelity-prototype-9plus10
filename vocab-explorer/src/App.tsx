@@ -97,8 +97,8 @@ function App() {
   const [showCreateGroupTutorial, setShowCreateGroupTutorial] = useState(false);
   const [showManageGroupTutorial, setShowManageGroupTutorial] = useState(false);
   const [showWordWebTutorial, setShowWordWebTutorial] = useState(false);
-  const [previousScreen, setPreviousScreen] = useState<Screen>('search')
-  const [helpReturnScreen, setHelpReturnScreen] = useState<Screen>('search')
+  // ✏️ CHANGED: replaced previousScreen + helpReturnScreen with a history stack
+  const [screenHistory, setScreenHistory] = useState<Screen[]>([])
   const [helpSection, setHelpSection] = useState<HelpSection>('how')
   const [searchValue, setSearchValue] = useState('')
   const [activeWordId, setActiveWordId] = useState(defaultWord.id)
@@ -248,27 +248,39 @@ function App() {
     setShowTutorial(false)
   }
 
+  // ✏️ CHANGED: navigate pushes current screen onto the history stack before switching
+  function navigate(nextScreen: Screen) {
+    setScreenHistory((h) => [...h, screen])
+    setScreen(nextScreen)
+  }
+
+  // ✏️ CHANGED: goBack pops the history stack instead of using a hardcoded previousScreen
+  function goBack() {
+    setScreenHistory((h) => {
+      const previous = h[h.length - 1] ?? 'search'
+      setScreen(previous)
+      return h.slice(0, -1)
+    })
+  }
+
   function openSettings(from: Screen) {
-    setPreviousScreen(from)
-    setScreen('settings')
+    // ✏️ CHANGED: use navigate() so the full history is preserved
+    navigate('settings')
   }
 
   function openHelp(from: Screen, nextSection: HelpSection = 'how') {
-    setHelpReturnScreen(from)
+    // ✏️ CHANGED: use navigate() so back returns to whichever screen opened help
     setHelpSection(nextSection)
-    setScreen('help')
+    navigate('help')
   }
 
   function getLocalizedHelpSection(screen: Screen): HelpSection {
-    if (screen === 'settings') {
-      if (previousScreen === 'help') {
-        return helpSection
-      }
-
-      return getLocalizedHelpSection(previousScreen)
-    }
-
+    // ✏️ CHANGED: removed previousScreen reference; settings now gets section from history
     switch (screen) {
+      case 'settings': {
+        const origin = screenHistory[screenHistory.length - 1]
+        return origin ? getLocalizedHelpSection(origin) : 'how'
+      }
       case 'search':
         return 'web'
       case 'map':
@@ -301,7 +313,7 @@ function App() {
       token: current.token + 1,
       wordId: nextWord.id,
     }))
-    setScreen('map')
+    navigate('map') // ✏️ CHANGED: was setScreen('map')
   }
 
   function openSearchScreen() {
@@ -310,7 +322,7 @@ function App() {
   }
 
   function openGroupsOverview() {
-    setScreen('groups')
+    navigate('groups') // ✏️ CHANGED: was setScreen('groups')
     setGroupsView('overview')
     setShowCreateGroupModal(false)
     setShowAddWordsModal(false)
@@ -325,7 +337,7 @@ function App() {
   function openGroupDetail(groupId: string) {
     setSelectedGroupId(groupId)
     setGroupsView('detail')
-    setScreen('groups')
+    navigate('groups') // ✏️ CHANGED: was setScreen('groups')
     setShowCreateGroupModal(false)
     setShowAddWordsModal(false)
     setGroupWordSearch('')
@@ -338,7 +350,7 @@ function App() {
 
   function openWordDetail(wordId: string) {
     setActiveWordId(wordId)
-    setScreen('detail')
+    navigate('detail') // ✏️ CHANGED: was setScreen('detail')
   }
 
   function addWordToGroup(groupId: string, wordId: string) {
@@ -587,27 +599,27 @@ function App() {
             selectedGroupId={selectedGroupId}
             noteValue={notesByWordId[activeWord.id] ?? ''}
             matchScore={matchScores[activeWord.id] ?? 78}
-            onBack={() => setScreen('map')}
+            onBack={goBack} /* ✏️ CHANGED: was hardcoded to setScreen('map') */
             onOpenSettings={() => openSettings('detail')}
             onOpenHelp={() => openHelp('detail', getLocalizedHelpSection('detail'))}
             onSaveWordToGroup={saveActiveWordToGroup}
             onNoteChange={(value) =>
               setNotesByWordId((current) => ({ ...current, [activeWord.id]: value }))
             }
-            onOpenGroups={openGroupsOverview}
+            onOpenGroups={(groupId) => groupId ? openGroupDetail(groupId) : openGroupsOverview()}
             onOpenHome={openSearchScreen}
           />
         )
       case 'settings':
         return (
           <SettingsPage
-            isMinimal={previousScreen === 'login' || previousScreen === 'register'}
+            isMinimal={['login', 'register'].includes(screenHistory[screenHistory.length - 1] ?? '')} /* ✏️ CHANGED: was previousScreen === 'login' || ... */
             semanticGaps={semanticGaps}
             fontSize={fontSize}
             contrastColor={contrastColor}
             hierarchyColor={hierarchyColor}
             relatedColor={relatedColor}
-            onBack={() => setScreen(previousScreen)}
+            onBack={goBack} /* ✏️ CHANGED: was setScreen(previousScreen) */
             onOpenHelp={() => openHelp('settings', getLocalizedHelpSection('settings'))}
             onOpenSettings={() => {}}
             // onToggleSemanticGaps={() => setSemanticGaps((current) => !current)}
@@ -631,7 +643,7 @@ function App() {
             contrastColor={contrastColor}
             hierarchyColor={hierarchyColor}
             relatedColor={relatedColor}
-            onBack={() => setScreen(helpReturnScreen)}
+            onBack={goBack} /* ✏️ CHANGED: was setScreen(helpReturnScreen) */
             onOpenHelp={() => {}}
             onOpenSettings={() => openSettings('help')}
             onSelectSection={setHelpSection}
@@ -658,11 +670,17 @@ function App() {
             showCreateGroupModal={showCreateGroupModal}
             showAddWordsModal={showAddWordsModal}
             addableWords={addableWords}
-            onBack={openGroupsOverview}
-            onOpenGroup={openGroupDetail}
+            onBack={() => {
+                          if (groupsView === 'detail' && screenHistory[screenHistory.length - 1] === 'groups') {
+                            goBack()
+                            setGroupsView('overview')
+                          } else {
+                            goBack()
+                          }
+                        }}            onOpenGroup={openGroupDetail}
             onOpenWord={(wordId) => {
               setActiveWordId(wordId)
-              setScreen('detail')
+              navigate('detail') // ✏️ CHANGED: was setScreen('detail')
             }}
             onGroupSearchChange={setGroupSearchValue}
             onNewGroupNameChange={setNewGroupName}
@@ -1128,7 +1146,7 @@ type WordDetailPageProps = {
   onOpenHelp: () => void
   onSaveWordToGroup: (groupId: string) => 'saved' | 'already-saved'
   onNoteChange: (value: string) => void
-  onOpenGroups: () => void
+  onOpenGroups: (groupId?: string) => void
   onOpenHome: () => void
 }
 
@@ -1234,11 +1252,6 @@ function WordDetailPage({
         </div>
       </div>
 
-      <div className="chip-row">
-        <WordChip tone="english" text={getWordLabel(word, 'english')} />
-        <WordChip tone="cree" text={getWordLabel(word, 'cree')} />
-      </div>
-
       {shapeMeaning && shapeLabel ? (
         <div className="detail-shape-card" aria-label="Word availability">
           <span className={`detail-shape-marker detail-shape-marker-${shapeLabel.toLowerCase().replace(/\s+/g, '-')}`} aria-hidden="true" />
@@ -1249,28 +1262,47 @@ function WordDetailPage({
         </div>
       ) : null}
 
-      <div className="word-art-panel">
-        <WordArtwork word={word} />
+      {/* Purple box: word type chip + meaning */}
+      <div className="detail-info-box detail-info-box-purple">
+        <div className="detail-info-box-header">
+          {word.english ? <WordChip tone="english" text={getWordLabel(word, 'english')} /> : null}
+          {word.cree ? <WordChip tone="cree" text={getWordLabel(word, 'cree')} /> : null}
+        </div>
+        <div className="detail-info-box-row">
+          <span className="detail-box-label">Description: </span>
+          <span className="detail-box-value">{word.info}</span>
+        </div>
       </div>
 
-      <div className="info-panel">
-        <strong>{word.type}</strong>
-        <p>{word.info}</p>
+      {/* Pink box: usage in a sentence */}
+      <div className="detail-info-box detail-info-box-pink">
+        <span className="detail-box-label">Word type: </span>
+        <p className="detail-box-sentence">{word.type}</p>
+      </div>
 
-        {relatedWords.length > 0 ? (
-          <>
-            <span className="info-label">{getWordLabel(word, 'cree')} connects to:</span>
-            <ul className="info-list">
-              {relatedWords.map((relatedWord) => (
-                <li key={relatedWord.id}>{getWordLabel(relatedWord)}</li>
-              ))}
-            </ul>
-          </>
-        ) : null}
+      {/* Blue box: related words (could also mean) */}
+      {relatedWords.length > 0 ? (
+        <div className="detail-info-box detail-info-box-blue">
+          <span className="detail-box-label">Related:</span>
+          <div className="detail-related-list">
+            {relatedWords.map((relatedWord) => (
+              <span key={relatedWord.id} className="detail-related-chip">{getWordLabel(relatedWord)}</span>
+            ))}
+          </div>
+        </div>
+      ) : null}
 
-        <p>
-          Cree to English match: <strong>{matchScore}%</strong>
-        </p>
+      {/* Match score bar */}
+      <div className="detail-match-box">
+        <div className="detail-match-label-row">
+          <span className="detail-match-label">Cree to English Match</span>
+          <span className="detail-match-info" title="How closely this Cree word maps to its English equivalent">ⓘ</span>
+        </div>
+        <div className="detail-match-bar-track">
+          <div className="detail-match-bar-fill" style={{ width: `${matchScore}%` }}>
+            <span className="detail-match-bar-pct">{matchScore}%</span>
+          </div>
+        </div>
       </div>
 
       <WordGroupButtons />
@@ -1279,6 +1311,14 @@ function WordDetailPage({
           <span>Add to group?</span>
         </div>
         <div className="group-picker-controls">
+        <span
+          className={`notes-save-confirmation ${groupSaveMessage ? 'notes-save-confirmation-visible' : ''}`}
+          role="status"
+          aria-live="polite"
+        >
+          {groupSaveMessage}
+        </span>
+        <div className="group-picker-controls-row">  
           <select
             value={pendingGroupId ? pendingGroupId : ""}
             onChange={(event) => setPendingGroupId(event.target.value)}
@@ -1304,13 +1344,7 @@ function WordDetailPage({
           >
             Save Word
           </button>
-          <span
-            className={`notes-save-confirmation ${groupSaveMessage ? 'notes-save-confirmation-visible' : ''}`}
-            role="status"
-            aria-live="polite"
-          >
-            {groupSaveMessage}
-          </span>
+          </div>
         </div>
       </div>
 
