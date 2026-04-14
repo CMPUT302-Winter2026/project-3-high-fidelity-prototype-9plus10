@@ -670,8 +670,14 @@ function App() {
             showCreateGroupModal={showCreateGroupModal}
             showAddWordsModal={showAddWordsModal}
             addableWords={addableWords}
-            onBack={groupsView === 'detail' ? openGroupsOverview : goBack} /* ✏️ CHANGED: detail-view back still goes to overview; overview back uses history */
-            onOpenGroup={openGroupDetail}
+            onBack={() => {
+                          if (groupsView === 'detail' && screenHistory[screenHistory.length - 1] === 'groups') {
+                            goBack()
+                            setGroupsView('overview')
+                          } else {
+                            goBack()
+                          }
+                        }}            onOpenGroup={openGroupDetail}
             onOpenWord={(wordId) => {
               setActiveWordId(wordId)
               navigate('detail') // ✏️ CHANGED: was setScreen('detail')
