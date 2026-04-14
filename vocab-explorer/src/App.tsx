@@ -1263,21 +1263,21 @@ function WordDetailPage({
           {word.cree ? <WordChip tone="cree" text={getWordLabel(word, 'cree')} /> : null}
         </div>
         <div className="detail-info-box-row">
-          <span className="detail-box-label">Meaning:</span>
+          <span className="detail-box-label">Description: </span>
           <span className="detail-box-value">{word.info}</span>
         </div>
       </div>
 
       {/* Pink box: usage in a sentence */}
       <div className="detail-info-box detail-info-box-pink">
-        <span className="detail-box-label">Usage in a sentence:</span>
+        <span className="detail-box-label">Word type: </span>
         <p className="detail-box-sentence">{word.type}</p>
       </div>
 
       {/* Blue box: related words (could also mean) */}
       {relatedWords.length > 0 ? (
         <div className="detail-info-box detail-info-box-blue">
-          <span className="detail-box-label">Could also mean:</span>
+          <span className="detail-box-label">Related:</span>
           <div className="detail-related-list">
             {relatedWords.map((relatedWord) => (
               <span key={relatedWord.id} className="detail-related-chip">{getWordLabel(relatedWord)}</span>
