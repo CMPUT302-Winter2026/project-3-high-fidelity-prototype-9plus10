@@ -841,6 +841,140 @@ button:active,
 
 
 /* ============================================================
+   WORD DETAIL — COLOURED INFO BOXES
+   ============================================================ */
+
+.detail-info-box {
+  border-radius: var(--radius-lg);
+  padding: 12px 14px;
+  border: 2px solid transparent;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.54),
+    var(--surface-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.detail-info-box-purple {
+  background: #e8d8f8;
+  border-color: #c4a0e0;
+}
+
+.detail-info-box-pink {
+  background: #fcd8e8;
+  border-color: #e8a0c0;
+}
+
+.detail-info-box-blue {
+  background: #c8e8f8;
+  border-color: #80c4e0;
+}
+
+.detail-info-box-header {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.detail-box-label {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #3d2a50;
+  letter-spacing: 0.02em;
+}
+
+.detail-info-box-pink .detail-box-label {
+  color: #5a1c38;
+}
+
+.detail-info-box-blue .detail-box-label {
+  color: #1a3f5c;
+}
+
+.detail-box-value {
+  color: #1e1030;
+  line-height: 1.38;
+  font-size: 0.96rem;
+}
+
+.detail-box-sentence {
+  margin: 0;
+  color: #2a0e1e;
+  line-height: 1.4;
+  font-size: 0.96rem;
+}
+
+.detail-related-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.detail-related-chip {
+  background: rgba(255, 255, 255, 0.56);
+  border: 1px solid rgba(28, 80, 120, 0.22);
+  border-radius: var(--radius-pill);
+  padding: 4px 12px;
+  font-size: 0.9rem;
+  color: #1a3a54;
+}
+
+.detail-match-box {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.detail-match-label-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.detail-match-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #3060a0;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.detail-match-info {
+  color: #4a78c0;
+  font-size: 0.9rem;
+  cursor: default;
+}
+
+.detail-match-bar-track {
+  height: 28px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.28);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  overflow: hidden;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.12);
+}
+
+.detail-match-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #e8b820 0%, #f0d060 100%);
+  border-radius: var(--radius-pill);
+  display: flex;
+  align-items: center;
+  padding-left: 10px;
+  min-width: 42px;
+  border-right: 2px dashed rgba(255, 255, 255, 0.6);
+}
+
+.detail-match-bar-pct {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #3a2800;
+}
+
+
+/* ============================================================
    SHARED SURFACE CARDS (info, settings, group panels)
    ============================================================ */
 

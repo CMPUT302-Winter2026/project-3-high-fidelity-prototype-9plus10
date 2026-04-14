@@ -1246,11 +1246,6 @@ function WordDetailPage({
         </div>
       </div>
 
-      <div className="chip-row">
-        <WordChip tone="english" text={getWordLabel(word, 'english')} />
-        <WordChip tone="cree" text={getWordLabel(word, 'cree')} />
-      </div>
-
       {shapeMeaning && shapeLabel ? (
         <div className="detail-shape-card" aria-label="Word availability">
           <span className={`detail-shape-marker detail-shape-marker-${shapeLabel.toLowerCase().replace(/\s+/g, '-')}`} aria-hidden="true" />
@@ -1261,28 +1256,47 @@ function WordDetailPage({
         </div>
       ) : null}
 
-      <div className="word-art-panel">
-        <WordArtwork word={word} />
+      {/* Purple box: word type chip + meaning */}
+      <div className="detail-info-box detail-info-box-purple">
+        <div className="detail-info-box-header">
+          <WordChip tone="english" text={getWordLabel(word, 'english')} />
+          <WordChip tone="cree" text={getWordLabel(word, 'cree')} />
+        </div>
+        <div className="detail-info-box-row">
+          <span className="detail-box-label">Description: </span>
+          <span className="detail-box-value">{word.info}</span>
+        </div>
       </div>
 
-      <div className="info-panel">
-        <strong>{word.type}</strong>
-        <p>{word.info}</p>
+      {/* Pink box: usage in a sentence */}
+      <div className="detail-info-box detail-info-box-pink">
+        <span className="detail-box-label">Word Type: </span>
+        <p className="detail-box-sentence">{word.type}</p>
+      </div>
 
-        {relatedWords.length > 0 ? (
-          <>
-            <span className="info-label">{getWordLabel(word, 'cree')} connects to:</span>
-            <ul className="info-list">
-              {relatedWords.map((relatedWord) => (
-                <li key={relatedWord.id}>{getWordLabel(relatedWord)}</li>
-              ))}
-            </ul>
-          </>
-        ) : null}
+      {/* Blue box: related words (could also mean) */}
+      {relatedWords.length > 0 ? (
+        <div className="detail-info-box detail-info-box-blue">
+          <span className="detail-box-label">Related Concepts: </span>
+          <div className="detail-related-list">
+            {relatedWords.map((relatedWord) => (
+              <span key={relatedWord.id} className="detail-related-chip">{getWordLabel(relatedWord)}</span>
+            ))}
+          </div>
+        </div>
+      ) : null}
 
-        <p>
-          Cree to English match: <strong>{matchScore}%</strong>
-        </p>
+      {/* Match score bar */}
+      <div className="detail-match-box">
+        <div className="detail-match-label-row">
+          <span className="detail-match-label">Cree to English Match: </span>
+          <span className="detail-match-info" title="How closely this Cree word maps to its English equivalent">ⓘ</span>
+        </div>
+        <div className="detail-match-bar-track">
+          <div className="detail-match-bar-fill" style={{ width: `${matchScore}%` }}>
+            <span className="detail-match-bar-pct">{matchScore}%</span>
+          </div>
+        </div>
       </div>
 
       <WordGroupButtons />
