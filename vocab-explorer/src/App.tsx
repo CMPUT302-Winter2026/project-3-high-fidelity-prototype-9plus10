@@ -606,7 +606,7 @@ function App() {
             onNoteChange={(value) =>
               setNotesByWordId((current) => ({ ...current, [activeWord.id]: value }))
             }
-            onOpenGroups={openGroupsOverview}
+            onOpenGroups={(groupId) => groupId ? openGroupDetail(groupId) : openGroupsOverview()}
             onOpenHome={openSearchScreen}
           />
         )
@@ -1140,7 +1140,7 @@ type WordDetailPageProps = {
   onOpenHelp: () => void
   onSaveWordToGroup: (groupId: string) => 'saved' | 'already-saved'
   onNoteChange: (value: string) => void
-  onOpenGroups: () => void
+  onOpenGroups: (groupId?: string) => void
   onOpenHome: () => void
 }
 
@@ -1259,25 +1259,25 @@ function WordDetailPage({
       {/* Purple box: word type chip + meaning */}
       <div className="detail-info-box detail-info-box-purple">
         <div className="detail-info-box-header">
-          <WordChip tone="english" text={getWordLabel(word, 'english')} />
-          <WordChip tone="cree" text={getWordLabel(word, 'cree')} />
+          {word.english ? <WordChip tone="english" text={getWordLabel(word, 'english')} /> : null}
+          {word.cree ? <WordChip tone="cree" text={getWordLabel(word, 'cree')} /> : null}
         </div>
         <div className="detail-info-box-row">
-          <span className="detail-box-label">Description: </span>
+          <span className="detail-box-label">Meaning:</span>
           <span className="detail-box-value">{word.info}</span>
         </div>
       </div>
 
       {/* Pink box: usage in a sentence */}
       <div className="detail-info-box detail-info-box-pink">
-        <span className="detail-box-label">Word Type: </span>
+        <span className="detail-box-label">Usage in a sentence:</span>
         <p className="detail-box-sentence">{word.type}</p>
       </div>
 
       {/* Blue box: related words (could also mean) */}
       {relatedWords.length > 0 ? (
         <div className="detail-info-box detail-info-box-blue">
-          <span className="detail-box-label">Related Concepts: </span>
+          <span className="detail-box-label">Could also mean:</span>
           <div className="detail-related-list">
             {relatedWords.map((relatedWord) => (
               <span key={relatedWord.id} className="detail-related-chip">{getWordLabel(relatedWord)}</span>
@@ -1289,7 +1289,7 @@ function WordDetailPage({
       {/* Match score bar */}
       <div className="detail-match-box">
         <div className="detail-match-label-row">
-          <span className="detail-match-label">Cree to English Match: </span>
+          <span className="detail-match-label">Cree to English Match</span>
           <span className="detail-match-info" title="How closely this Cree word maps to its English equivalent">ⓘ</span>
         </div>
         <div className="detail-match-bar-track">
