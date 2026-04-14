@@ -97,8 +97,8 @@ function App() {
   const [showCreateGroupTutorial, setShowCreateGroupTutorial] = useState(false);
   const [showManageGroupTutorial, setShowManageGroupTutorial] = useState(false);
   const [showWordWebTutorial, setShowWordWebTutorial] = useState(false);
-  const [previousScreen, setPreviousScreen] = useState<Screen>('search')
-  const [helpReturnScreen, setHelpReturnScreen] = useState<Screen>('search')
+  // ✏️ CHANGED: replaced previousScreen + helpReturnScreen with a history stack
+  const [screenHistory, setScreenHistory] = useState<Screen[]>([])
   const [helpSection, setHelpSection] = useState<HelpSection>('how')
   const [searchValue, setSearchValue] = useState('')
   const [activeWordId, setActiveWordId] = useState(defaultWord.id)
@@ -248,27 +248,39 @@ function App() {
     setShowTutorial(false)
   }
 
+  // ✏️ CHANGED: navigate pushes current screen onto the history stack before switching
+  function navigate(nextScreen: Screen) {
+    setScreenHistory((h) => [...h, screen])
+    setScreen(nextScreen)
+  }
+
+  // ✏️ CHANGED: goBack pops the history stack instead of using a hardcoded previousScreen
+  function goBack() {
+    setScreenHistory((h) => {
+      const previous = h[h.length - 1] ?? 'search'
+      setScreen(previous)
+      return h.slice(0, -1)
+    })
+  }
+
   function openSettings(from: Screen) {
-    setPreviousScreen(from)
-    setScreen('settings')
+    // ✏️ CHANGED: use navigate() so the full history is preserved
+    navigate('settings')
   }
 
   function openHelp(from: Screen, nextSection: HelpSection = 'how') {
-    setHelpReturnScreen(from)
+    // ✏️ CHANGED: use navigate() so back returns to whichever screen opened help
     setHelpSection(nextSection)
-    setScreen('help')
+    navigate('help')
   }
 
   function getLocalizedHelpSection(screen: Screen): HelpSection {
-    if (screen === 'settings') {
-      if (previousScreen === 'help') {
-        return helpSection
-      }
-
-      return getLocalizedHelpSection(previousScreen)
-    }
-
+    // ✏️ CHANGED: removed previousScreen reference; settings now gets section from history
     switch (screen) {
+      case 'settings': {
+        const origin = screenHistory[screenHistory.length - 1]
+        return origin ? getLocalizedHelpSection(origin) : 'how'
+      }
       case 'search':
         return 'web'
       case 'map':
@@ -301,7 +313,7 @@ function App() {
       token: current.token + 1,
       wordId: nextWord.id,
     }))
-    setScreen('map')
+    navigate('map') // ✏️ CHANGED: was setScreen('map')
   }
 
   function openSearchScreen() {
@@ -310,7 +322,7 @@ function App() {
   }
 
   function openGroupsOverview() {
-    setScreen('groups')
+    navigate('groups') // ✏️ CHANGED: was setScreen('groups')
     setGroupsView('overview')
     setShowCreateGroupModal(false)
     setShowAddWordsModal(false)
@@ -325,7 +337,7 @@ function App() {
   function openGroupDetail(groupId: string) {
     setSelectedGroupId(groupId)
     setGroupsView('detail')
-    setScreen('groups')
+    navigate('groups') // ✏️ CHANGED: was setScreen('groups')
     setShowCreateGroupModal(false)
     setShowAddWordsModal(false)
     setGroupWordSearch('')
@@ -338,7 +350,7 @@ function App() {
 
   function openWordDetail(wordId: string) {
     setActiveWordId(wordId)
-    setScreen('detail')
+    navigate('detail') // ✏️ CHANGED: was setScreen('detail')
   }
 
   function addWordToGroup(groupId: string, wordId: string) {
@@ -587,7 +599,7 @@ function App() {
             selectedGroupId={selectedGroupId}
             noteValue={notesByWordId[activeWord.id] ?? ''}
             matchScore={matchScores[activeWord.id] ?? 78}
-            onBack={() => setScreen('map')}
+            onBack={goBack} /* ✏️ CHANGED: was hardcoded to setScreen('map') */
             onOpenSettings={() => openSettings('detail')}
             onOpenHelp={() => openHelp('detail', getLocalizedHelpSection('detail'))}
             onSaveWordToGroup={saveActiveWordToGroup}
@@ -601,13 +613,13 @@ function App() {
       case 'settings':
         return (
           <SettingsPage
-            isMinimal={previousScreen === 'login' || previousScreen === 'register'}
+            isMinimal={['login', 'register'].includes(screenHistory[screenHistory.length - 1] ?? '')} /* ✏️ CHANGED: was previousScreen === 'login' || ... */
             semanticGaps={semanticGaps}
             fontSize={fontSize}
             contrastColor={contrastColor}
             hierarchyColor={hierarchyColor}
             relatedColor={relatedColor}
-            onBack={() => setScreen(previousScreen)}
+            onBack={goBack} /* ✏️ CHANGED: was setScreen(previousScreen) */
             onOpenHelp={() => openHelp('settings', getLocalizedHelpSection('settings'))}
             onOpenSettings={() => {}}
             // onToggleSemanticGaps={() => setSemanticGaps((current) => !current)}
@@ -631,7 +643,7 @@ function App() {
             contrastColor={contrastColor}
             hierarchyColor={hierarchyColor}
             relatedColor={relatedColor}
-            onBack={() => setScreen(helpReturnScreen)}
+            onBack={goBack} /* ✏️ CHANGED: was setScreen(helpReturnScreen) */
             onOpenHelp={() => {}}
             onOpenSettings={() => openSettings('help')}
             onSelectSection={setHelpSection}
@@ -658,11 +670,11 @@ function App() {
             showCreateGroupModal={showCreateGroupModal}
             showAddWordsModal={showAddWordsModal}
             addableWords={addableWords}
-            onBack={openGroupsOverview}
+            onBack={groupsView === 'detail' ? openGroupsOverview : goBack} /* ✏️ CHANGED: detail-view back still goes to overview; overview back uses history */
             onOpenGroup={openGroupDetail}
             onOpenWord={(wordId) => {
               setActiveWordId(wordId)
-              setScreen('detail')
+              navigate('detail') // ✏️ CHANGED: was setScreen('detail')
             }}
             onGroupSearchChange={setGroupSearchValue}
             onNewGroupNameChange={setNewGroupName}
